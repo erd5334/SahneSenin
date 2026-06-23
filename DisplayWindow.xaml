@@ -93,6 +93,8 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="60"/> <!-- Spacing column -->
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="40"/> <!-- Spacing column -->
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Circular Spin the Wheel Grid -->
@@ -175,6 +177,45 @@
                                         FontSize="12" Foreground="{StaticResource TextMutedBrush}"
                                         HorizontalAlignment="Center" TextAlignment="Center"/>
                         </StackPanel>
+                    </Border>
+
+                    <!-- Far Right: All Artists Pool (shown after spin completes or while waiting) -->
+                    <Border Grid.Column="4" BorderBrush="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
+                            CornerRadius="16" Padding="20" Width="280" Height="400" VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Title -->
+                            <TextBlock Grid.Row="0" Text="SANATÇI HAVUZU" FontSize="14" FontWeight="Bold"
+                                       Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
+                                       HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                            
+                            <!-- Scrollable list of system artists -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding AllSystemArtists}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,6" Padding="10,6" CornerRadius="8" Background="#12FFFFFF" BorderThickness="1" BorderBrush="#20FFFFFF">
+                                                <TextBlock Text="{Binding}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
                 </Grid>
 

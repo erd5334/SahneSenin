@@ -364,6 +364,26 @@ namespace SahneSenin.ViewModels
             }
         }
 
+        public List<string> AllSystemArtists
+        {
+            get
+            {
+                try
+                {
+                    var data = _dataService.LoadData();
+                    if (data == null || data.Artists == null) return new List<string>();
+                    return data.Artists.Keys
+                        .Where(a => !string.Equals(a, "Genel", StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(a => a)
+                        .ToList();
+                }
+                catch
+                {
+                    return new List<string>();
+                }
+            }
+        }
+
         public bool CanUseJoker => CurrentTeacher != null && !CurrentTeacher.IsJokerUsed && CurrentState == GameState.GuessPhase;
 
         public SpeechService SpeechService => _speechService;
@@ -434,6 +454,7 @@ namespace SahneSenin.ViewModels
 
             Teachers = new ObservableCollection<Teacher>(data.Teachers);
             UpdateUnplayedTeachers();
+            OnPropertyChanged(nameof(AllSystemArtists));
 
             if (Teachers.Count > 0)
             {
