@@ -179,6 +179,9 @@
                                         <TextBlock Text="SEYİRCİ OYLAMASI AKTİF" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
                                     </Border>
                                     
+                                    <!-- Voting Countdown Status -->
+                                    <TextBlock Text="{Binding VoteStatusText}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" TextAlignment="Center" Margin="0,0,0,12"/>
+                                    
                                     <!-- QR Code Image (Enlarged) -->
                                     <Border BorderThickness="3" BorderBrush="White" CornerRadius="12" Padding="6" Background="White" HorizontalAlignment="Center" Margin="0,0,0,12" Effect="{StaticResource CyanGlow}">
                                         <Image Source="{Binding VoteQrCodeUrl}" Width="180" Height="180" Stretch="Uniform"/>

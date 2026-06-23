@@ -45,6 +45,12 @@ namespace SahneSenin.ViewModels
         private bool _isVotingActive = false;
         private readonly System.Net.Http.HttpClient _httpClient = new();
         private readonly DispatcherTimer _votePollTimer;
+        private int _voteRemainingSeconds = 30;
+        private string _voteStatusText = "Kalan Süre: 30sn";
+        private readonly DispatcherTimer _voteCountdownTimer;
+        private int _pendingSpectatorBonus = 0;
+        private double _pendingSpectatorAverage = 0.0;
+        private bool _isSpectatorVotingClosedEarly = false;
 
         private bool _isServerRunning = true;
         private bool _isServerToggleEnabled = true;
@@ -154,6 +160,18 @@ namespace SahneSenin.ViewModels
         {
             get => _serverStatusText;
             set => SetProperty(ref _serverStatusText, value);
+        }
+
+        public int VoteRemainingSeconds
+        {
+            get => _voteRemainingSeconds;
+            set => SetProperty(ref _voteRemainingSeconds, value);
+        }
+
+        public string VoteStatusText
+        {
+            get => _voteStatusText;
+            set => SetProperty(ref _voteStatusText, value);
         }
 
         public string VoteQrCodeUrl
@@ -383,6 +401,12 @@ namespace SahneSenin.ViewModels
                 Interval = TimeSpan.FromSeconds(1.0)
             };
             _votePollTimer.Tick += VotePollTimer_Tick;
+
+            _voteCountdownTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1.0)
+            };
+            _voteCountdownTimer.Tick += VoteCountdownTimer_Tick;
 
             // Wire up commands
             LoadCsvCommand = new RelayCommand(ExecuteLoadCsv);
@@ -807,11 +831,25 @@ namespace SahneSenin.ViewModels
         {
             IsConfettiActive = false;
 
-            // Calculate and add spectator bonus score if oylama was active
-            if (CurrentTeacher != null && IsVotingActive)
+            // Calculate and add spectator bonus score if oylama was active or closed early
+            if (CurrentTeacher != null)
             {
-                double finalAvg = await StopVotingSession();
-                int bonusPoints = (int)Math.Round(finalAvg * 3.0); // 1-5 stars -> 3-15 points
+                double finalAvg = 0.0;
+                int bonusPoints = 0;
+
+                if (_isSpectatorVotingClosedEarly)
+                {
+                    finalAvg = _pendingSpectatorAverage;
+                    bonusPoints = _pendingSpectatorBonus;
+                    _isSpectatorVotingClosedEarly = false;
+                }
+                else if (IsVotingActive)
+                {
+                    _voteCountdownTimer.Stop();
+                    finalAvg = await StopVotingSession();
+                    bonusPoints = (int)Math.Round(finalAvg * 3.0); // 1-5 stars -> 3-15 points
+                }
+
                 if (bonusPoints > 0)
                 {
                     var match = Teachers.FirstOrDefault(t => t.Name == CurrentTeacher.Name);
@@ -1175,6 +1213,15 @@ namespace SahneSenin.ViewModels
                 VoteAverage = 0.0;
                 IsVotingActive = true;
 
+                // Reset countdown timer variables
+                _voteCountdownTimer.Stop();
+                VoteRemainingSeconds = 30;
+                VoteStatusText = "Kalan Süre: 30sn";
+
+                _pendingSpectatorBonus = 0;
+                _pendingSpectatorAverage = 0.0;
+                _isSpectatorVotingClosedEarly = false;
+
                 // QR Code URL pointing to our remote oylama site
                 string voteUrl = $"https://api.eryazilimci.com/vote/?name={Uri.EscapeDataString(teacherName)}";
                 VoteQrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(voteUrl)}";
@@ -1187,6 +1234,7 @@ namespace SahneSenin.ViewModels
 
                 await _httpClient.PostAsync("https://api.eryazilimci.com/vote/api/start", content);
                 _votePollTimer.Start();
+                _voteCountdownTimer.Start();
             }
             catch
             {
@@ -1200,6 +1248,7 @@ namespace SahneSenin.ViewModels
             try
             {
                 _votePollTimer.Stop();
+                _voteCountdownTimer.Stop();
                 IsVotingActive = false;
 
                 // Call status one last time to ensure we have the absolute final votes
@@ -1253,6 +1302,45 @@ namespace SahneSenin.ViewModels
             catch
             {
                 // Ignore connection errors
+            }
+        }
+
+        private void VoteCountdownTimer_Tick(object? sender, EventArgs e)
+        {
+            if (VoteRemainingSeconds > 0)
+            {
+                VoteRemainingSeconds--;
+                if (VoteRemainingSeconds > 0)
+                {
+                    VoteStatusText = $"Kalan Süre: {VoteRemainingSeconds}sn";
+                }
+                else
+                {
+                    _voteCountdownTimer.Stop();
+                    AutoCloseVotingSession();
+                }
+            }
+            else
+            {
+                _voteCountdownTimer.Stop();
+            }
+        }
+
+        private async void AutoCloseVotingSession()
+        {
+            VoteStatusText = "Oylama Süresi Doldu!";
+            try
+            {
+                double finalAvg = await StopVotingSession();
+                int bonusPoints = (int)Math.Round(finalAvg * 3.0);
+                
+                _pendingSpectatorBonus = bonusPoints;
+                _pendingSpectatorAverage = finalAvg;
+                _isSpectatorVotingClosedEarly = true;
+            }
+            catch
+            {
+                // Ignore network errors
             }
         }
 
