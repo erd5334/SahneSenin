@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
@@ -38,6 +39,117 @@ namespace SahneSenin
             Loaded += DisplayWindow_Loaded;
             Unloaded += DisplayWindow_Unloaded;
             DataContextChanged += DisplayWindow_DataContextChanged;
+        }
+
+        public void ShowOnTargetMonitor()
+        {
+            try
+            {
+                var screens = System.Windows.Forms.Screen.AllScreens;
+                if (screens.Length == 0)
+                {
+                    this.Show();
+                    return;
+                }
+
+                var appSettings = AppSettings.Load();
+                System.Windows.Forms.Screen target = screens[0];
+
+                if (appSettings.ProjectionScreenIndex >= 0 && appSettings.ProjectionScreenIndex < screens.Length)
+                {
+                    target = screens[appSettings.ProjectionScreenIndex];
+                }
+                else if (screens.Length > 1)
+                {
+                    // Auto: pick first non-primary screen
+                    foreach (var screen in screens)
+                    {
+                        if (!screen.Primary)
+                        {
+                            target = screen;
+                            break;
+                        }
+                    }
+                }
+
+                var workingArea = target.WorkingArea;
+
+                // Get current DPI scaling factors from the main window (which is already loaded)
+                double dpiScaleX = 1.0;
+                double dpiScaleY = 1.0;
+
+                var mainWindow = System.Windows.Application.Current.MainWindow;
+                if (mainWindow != null)
+                {
+                    var dpi = VisualTreeHelper.GetDpi(mainWindow);
+                    dpiScaleX = dpi.DpiScaleX;
+                    dpiScaleY = dpi.DpiScaleY;
+                }
+
+                // Set coordinates in logical (DIP) units by dividing physical pixels by DPI scale
+                this.WindowStartupLocation = WindowStartupLocation.Manual;
+                this.Left = workingArea.Left / dpiScaleX;
+                this.Top = workingArea.Top / dpiScaleY;
+                this.Width = workingArea.Width / dpiScaleX;
+                this.Height = workingArea.Height / dpiScaleY;
+
+                this.WindowStyle = WindowStyle.None;
+                this.Topmost = true;
+
+                // Show in Normal state first, then maximize for perfect borderless
+                this.WindowState = WindowState.Normal;
+                this.Show();
+                this.WindowState = WindowState.Maximized;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error positioning display window: " + ex.Message);
+                this.Show();
+            }
+        }
+
+        public void ToggleBlackout()
+        {
+            BlackoutOverlay.Visibility = (BlackoutOverlay.Visibility == Visibility.Visible) 
+                ? Visibility.Collapsed 
+                : Visibility.Visible;
+        }
+
+        public void SetBlackout(bool blackout)
+        {
+            BlackoutOverlay.Visibility = blackout ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                this.Close();
+                e.Handled = true;
+                return;
+            }
+
+            var appSettings = AppSettings.Load();
+            if (e.Key == Key.B || e.Key == appSettings.ProjectionShortcutKey)
+            {
+                ToggleBlackout();
+                e.Handled = true;
+            }
+        }
+
+        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (this.WindowStyle == WindowStyle.None)
+            {
+                this.WindowStyle = WindowStyle.SingleBorderWindow;
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                this.WindowStyle = WindowStyle.None;
+                this.WindowState = WindowState.Maximized;
+            }
+            e.Handled = true;
         }
 
         private void DisplayWindow_Loaded(object sender, RoutedEventArgs e)

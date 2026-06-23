@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="Sahne Senin - Sunucu Kontrol Paneli" Height="700" Width="1024"
         Background="{StaticResource WindowBgGradient}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown">
 
     <Window.Resources>
         <!-- State-based Visibility Styles -->
@@ -111,8 +112,20 @@
                         <TextBlock Text="{Binding SpeechService.MicStatus}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
+                <!-- Settings Dropdown -->
+                <Menu x:Name="MainMenu" Background="#1A1733" Foreground="White" BorderThickness="0" VerticalAlignment="Center" Margin="5">
+                    <MenuItem Header="⚙️ Ayarlar" Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="10,8">
+                        <MenuItem Header="Projeksiyon Ekranı" x:Name="ProjectionMenu" Foreground="White" Background="#1A1733"/>
+                        <MenuItem Header="Şarkı Dinleme Süresi" x:Name="MenuListeningDuration" Foreground="White" Background="#1A1733"/>
+                        <MenuItem Header="Cevap Verme Süresi" x:Name="MenuGuessingDuration" Foreground="White" Background="#1A1733"/>
+                        <MenuItem Header="Yansıtmayı Aç/Kapat" x:Name="MenuToggleProj" Foreground="White" Background="#1A1733" Click="MenuToggleProj_Click"/>
+                        <MenuItem Header="Kısayol Tuşu Belirle: F12" x:Name="MenuProjShortcut" Foreground="White" Background="#1A1733" Click="MenuProjShortcut_Click"/>
+                    </MenuItem>
+                </Menu>
+                
                 <Button Content="CSV'den Yükle" Command="{Binding LoadCsvCommand}" Style="{StaticResource NeonCyanButton}" Margin="5" Padding="15,8"/>
                 <Button Content="Oyunu Sıfırla" Command="{Binding ResetGameCommand}" Style="{StaticResource NeonButton}" Margin="5" Padding="15,8"/>
+                <Button Content="{Binding LeaderboardButtonText}" Command="{Binding ToggleLeaderboardCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" Margin="5" Padding="15,8"/>
             </StackPanel>
         </Grid>
 
@@ -291,6 +304,46 @@
                                     </Button.Style>
                                 </Button>
 
+                                <!-- Pool Choice & Risk Options (Visible when Spin completed, before starting game) -->
+                                <StackPanel Margin="0,0,0,20">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    
+                                    <!-- Contestant Details -->
+                                    <Border Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                        <StackPanel>
+                                            <TextBlock Text="YARIŞMACI BİLGİSİ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                            <TextBlock Text="{Binding CurrentTeacher.SelectedArtistsText, StringFormat='Sanatçılar: {0}'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Extra Artist Selection -->
+                                    <Border Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                        <StackPanel>
+                                            <TextBlock Text="EKSTRA SANATÇI SEÇİMİ" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <ComboBox ItemsSource="{Binding AvailableExtraArtists}" SelectedItem="{Binding ExtraSelectedArtist}" Width="250" Height="30" FontSize="13" Background="#1A1733" Foreground="Black" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Seçilen sanatçının şarkıları, yarışmacının şarkı havuzuna dahil edilir." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Text="Oyun Seçenekleri" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    
+                                    <CheckBox Content="Tüm Şarkılar Havuzu (2x Puan)" IsChecked="{Binding UseAllArtistsPool}" 
+                                              Foreground="White" FontSize="13" HorizontalAlignment="Left" Margin="20,0,0,8" Cursor="Hand"/>
+                                              
+                                    <CheckBox Content="Çifte Şans / Risk Butonu (-5 / +2x)" IsChecked="{Binding IsRiskActive}" 
+                                              Foreground="White" FontSize="13" HorizontalAlignment="Left" Margin="20,0,0,15" Cursor="Hand"/>
+                                </StackPanel>
+
                                 <!-- Button 2: Start Game (Visible when IsSpinCompleted is true) -->
                                 <Button Content="Yarışmayı Başlat" 
                                         Command="{Binding StartGameCommand}"
@@ -383,7 +436,7 @@
                             <!-- Timer Display -->
                             <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding CountdownText, StringFormat='Kalan Süre: {0} Saniye'}" FontSize="18" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                <ProgressBar Value="{Binding CountdownProgress}" Maximum="10" Width="300" Height="15" Margin="0,5,0,0" Foreground="{StaticResource NeonPinkBrush}" Background="#20000000" BorderBrush="#35FFFFFF"/>
+                                <ProgressBar Value="{Binding CountdownProgress}" Maximum="{Binding MaxCountdown}" Width="300" Height="15" Margin="0,5,0,0" Foreground="{StaticResource NeonPinkBrush}" Background="#20000000" BorderBrush="#35FFFFFF"/>
                             </StackPanel>
 
                             <!-- Grading Buttons (Host can grade early) -->
@@ -444,6 +497,11 @@
                                                 <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                                 <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
                                             </DataTrigger>
+                                            <!-- Hidden choice indicator (Joker greyout) -->
+                                            <DataTrigger Binding="{Binding AnswerChoices[0].IsHidden}" Value="True">
+                                                <Setter Property="Opacity" Value="0.2"/>
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -486,6 +544,11 @@
                                                 <Setter Property="Background" Value="#30FF007F"/>
                                                 <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                                 <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                            </DataTrigger>
+                                            <!-- Hidden choice indicator (Joker greyout) -->
+                                            <DataTrigger Binding="{Binding AnswerChoices[1].IsHidden}" Value="True">
+                                                <Setter Property="Opacity" Value="0.2"/>
+                                                <Setter Property="IsEnabled" Value="False"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -530,6 +593,11 @@
                                                 <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                                 <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
                                             </DataTrigger>
+                                            <!-- Hidden choice indicator (Joker greyout) -->
+                                            <DataTrigger Binding="{Binding AnswerChoices[2].IsHidden}" Value="True">
+                                                <Setter Property="Opacity" Value="0.2"/>
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -573,6 +641,11 @@
                                                 <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                                 <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
                                             </DataTrigger>
+                                            <!-- Hidden choice indicator (Joker greyout) -->
+                                            <DataTrigger Binding="{Binding AnswerChoices[3].IsHidden}" Value="True">
+                                                <Setter Property="Opacity" Value="0.2"/>
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -608,14 +681,63 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Confirm Button -->
-                            <Button Grid.Column="0" Content="Cevabı Onayla" Command="{Binding ConfirmAnswerCommand}" Style="{StaticResource NeonGreenButton}" Width="160" Height="45" VerticalAlignment="Center"/>
+                            <!-- Confirm & Joker Buttons -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Cevabı Onayla" Command="{Binding ConfirmAnswerCommand}" Style="{StaticResource NeonGreenButton}" Width="150" Height="45" Margin="0,0,10,0"/>
+                                <Button Content="50:50 Joker" Command="{Binding UseJokerCommand}" Style="{StaticResource NeonYellowButton}" Width="120" Height="45"/>
+                            </StackPanel>
 
                             <!-- Timer Display -->
-                            <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CountdownText, StringFormat='Kalan Tahmin Süresi: {0} Saniye'}" FontSize="16" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                <ProgressBar Value="{Binding CountdownProgress}" Maximum="10" Width="250" Height="12" Margin="0,5,0,0" Foreground="{StaticResource NeonGreenBrush}" Background="#20000000" BorderBrush="#35FFFFFF"/>
-                            </StackPanel>
+                             <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                 <TextBlock Text="{Binding CountdownText, StringFormat='Kalan Tahmin Süresi: {0} Saniye'}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center">
+                                     <TextBlock.Style>
+                                         <Style TargetType="TextBlock">
+                                             <Setter Property="Foreground" Value="White"/>
+                                             <Style.Triggers>
+                                                 <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                                     <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                                     <DataTrigger.EnterActions>
+                                                         <BeginStoryboard Name="HostFlashText">
+                                                             <Storyboard>
+                                                                 <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                  From="1.0" To="0.3" Duration="0:0:0.25"
+                                                                                  AutoReverse="True" RepeatBehavior="Forever"/>
+                                                             </Storyboard>
+                                                         </BeginStoryboard>
+                                                     </DataTrigger.EnterActions>
+                                                     <DataTrigger.ExitActions>
+                                                         <StopStoryboard BeginStoryboardName="HostFlashText"/>
+                                                     </DataTrigger.ExitActions>
+                                                 </DataTrigger>
+                                             </Style.Triggers>
+                                         </Style>
+                                     </TextBlock.Style>
+                                 </TextBlock>
+                                 <ProgressBar Value="{Binding CountdownProgress}" Maximum="{Binding MaxCountdown}" Width="250" Height="12" Margin="0,5,0,0" Background="#20000000" BorderBrush="#35FFFFFF">
+                                     <ProgressBar.Style>
+                                         <Style TargetType="ProgressBar">
+                                             <Setter Property="Foreground" Value="{StaticResource NeonGreenBrush}"/>
+                                             <Style.Triggers>
+                                                 <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                                     <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                                     <DataTrigger.EnterActions>
+                                                         <BeginStoryboard Name="HostFlashBar">
+                                                             <Storyboard>
+                                                                 <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                  From="1.0" To="0.5" Duration="0:0:0.25"
+                                                                                  AutoReverse="True" RepeatBehavior="Forever"/>
+                                                             </Storyboard>
+                                                         </BeginStoryboard>
+                                                     </DataTrigger.EnterActions>
+                                                     <DataTrigger.ExitActions>
+                                                         <StopStoryboard BeginStoryboardName="HostFlashBar"/>
+                                                     </DataTrigger.ExitActions>
+                                                 </DataTrigger>
+                                             </Style.Triggers>
+                                         </Style>
+                                     </ProgressBar.Style>
+                                 </ProgressBar>
+                             </StackPanel>
 
                             <!-- Manual Override Buttons -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -661,12 +783,10 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- Next Attempt Button -->
-                        <Button Grid.Row="2" Content="{Binding NextAttemptButtonText}"
-                                Command="{Binding NextAttemptCommand}" 
-                                Height="50" FontSize="16" FontWeight="Bold" Margin="0,20,0,0">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource NeonGreenButton}">
+                        <!-- Next Attempt Section (Button + Settings) -->
+                        <StackPanel Grid.Row="2" Margin="0,15,0,0">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsNotLastAttempt}" Value="True">
@@ -674,8 +794,22 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Button.Style>
-                        </Button>
+                            </StackPanel.Style>
+
+                            <!-- Settings for Next Attempt -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                <CheckBox Content="Tüm Şarkılar Havuzu (2x Puan)" IsChecked="{Binding UseAllArtistsPool}" 
+                                          Foreground="White" FontSize="13" Margin="0,0,20,0" Cursor="Hand"/>
+                                <CheckBox Content="Çifte Şans / Risk Butonu (-5 / +2x)" IsChecked="{Binding IsRiskActive}" 
+                                          Foreground="White" FontSize="13" Cursor="Hand"/>
+                            </StackPanel>
+
+                            <!-- Next Attempt Button -->
+                            <Button Content="{Binding NextAttemptButtonText}"
+                                    Command="{Binding NextAttemptCommand}" 
+                                    Style="{StaticResource NeonGreenButton}"
+                                    Height="50" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
 
                         <!-- Back to List button -->
                         <Button Grid.Row="2" Content="Listeye Dön (Sonraki Yarışmacı)" 

@@ -29,3 +29,8 @@ Desktop.ini
 
 # User data
 data.json
+app_settings.json
+
+# Media Assets
+MusicPool/
+TeacherPhotos/

@@ -11,16 +11,24 @@ namespace SahneSenin.Services
     {
         private readonly string _dataFilePath;
         private readonly string _musicPoolPath;
+        private readonly string _teacherPhotosPath;
 
         public DataService()
         {
             _dataFilePath = GetFilePath("data.json");
             _musicPoolPath = GetFilePath("MusicPool");
+            _teacherPhotosPath = GetFilePath("TeacherPhotos");
 
             // Ensure MusicPool exists
             if (!Directory.Exists(_musicPoolPath))
             {
                 Directory.CreateDirectory(_musicPoolPath);
+            }
+
+            // Ensure TeacherPhotos exists
+            if (!Directory.Exists(_teacherPhotosPath))
+            {
+                Directory.CreateDirectory(_teacherPhotosPath);
             }
         }
 
@@ -164,6 +172,11 @@ namespace SahneSenin.Services
         public string GetMusicPoolDirectory()
         {
             return _musicPoolPath;
+        }
+
+        public string GetTeacherPhotosDirectory()
+        {
+            return _teacherPhotosPath;
         }
 
         private static string GetFilePath(string fileName)

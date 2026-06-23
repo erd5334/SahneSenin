@@ -50,6 +50,13 @@ namespace SahneSenin.ViewModels
         private readonly List<string> _playedSongsInTurn = new();
         private readonly SpeechService _speechService;
 
+        private bool _isLeaderboardVisible;
+        private bool _useAllArtistsPool;
+        private bool _isRiskActive;
+        private int _currentStreak = 0;
+        private bool _isTimerCritical = false;
+        private int _lastTickSeconds = -1;
+
         // Events for UI animation triggers
         public event EventHandler<Teacher>? SpinStarted;
         public event Action? ConfettiTriggered;
@@ -66,6 +73,8 @@ namespace SahneSenin.ViewModels
         public ICommand ConfirmAnswerCommand { get; }
         public ICommand GoToGuessPhaseCommand { get; }
         public ICommand NextAttemptCommand { get; }
+        public ICommand ToggleLeaderboardCommand { get; }
+        public ICommand UseJokerCommand { get; }
 
         public GameState CurrentState
         {
@@ -93,6 +102,7 @@ namespace SahneSenin.ViewModels
                 if (SetProperty(ref _currentTeacher, value))
                 {
                     OnPropertyChanged(nameof(IsTeacherSelected));
+                    OnPropertyChanged(nameof(AvailableExtraArtists));
                 }
             }
         }
@@ -187,6 +197,87 @@ namespace SahneSenin.ViewModels
             ? "Sonraki şarkı için sunucu komutu bekleniyor..." 
             : "Sonraki yarışmacı seçimi için sunucu komutu bekleniyor...";
 
+        public bool IsLeaderboardVisible
+        {
+            get => _isLeaderboardVisible;
+            set
+            {
+                if (SetProperty(ref _isLeaderboardVisible, value))
+                {
+                    OnPropertyChanged(nameof(LeaderboardButtonText));
+                    OnPropertyChanged(nameof(LeaderboardTeachers));
+                }
+            }
+        }
+
+        public string LeaderboardButtonText => IsLeaderboardVisible ? "Skor Tablosunu Gizle" : "Skor Tablosunu Göster";
+
+        public List<Teacher> LeaderboardTeachers => Teachers
+            .Where(t => t.HasPlayed)
+            .OrderByDescending(t => t.Score)
+            .ToList();
+
+        public bool UseAllArtistsPool
+        {
+            get => _useAllArtistsPool;
+            set => SetProperty(ref _useAllArtistsPool, value);
+        }
+
+        public bool IsRiskActive
+        {
+            get => _isRiskActive;
+            set => SetProperty(ref _isRiskActive, value);
+        }
+
+        public int CurrentStreak
+        {
+            get => _currentStreak;
+            set
+            {
+                if (SetProperty(ref _currentStreak, value))
+                {
+                    OnPropertyChanged(nameof(IsStreakActive));
+                }
+            }
+        }
+
+        public bool IsStreakActive => CurrentStreak >= 2;
+
+        public bool IsTimerCritical
+        {
+            get => _isTimerCritical;
+            private set => SetProperty(ref _isTimerCritical, value);
+        }
+
+        private double _maxCountdown = 10.0;
+        public double MaxCountdown
+        {
+            get => _maxCountdown;
+            set => SetProperty(ref _maxCountdown, value);
+        }
+
+        private string? _extraSelectedArtist;
+        public string? ExtraSelectedArtist
+        {
+            get => _extraSelectedArtist;
+            set => SetProperty(ref _extraSelectedArtist, value);
+        }
+
+        public List<string> AvailableExtraArtists
+        {
+            get
+            {
+                if (CurrentTeacher == null) return new List<string>();
+                var data = _dataService.LoadData();
+                return data.Artists.Keys
+                    .Where(a => !CurrentTeacher.SelectedArtists.Contains(a))
+                    .OrderBy(a => a)
+                    .ToList();
+            }
+        }
+
+        public bool CanUseJoker => CurrentTeacher != null && !CurrentTeacher.IsJokerUsed && CurrentState == GameState.GuessPhase;
+
         public SpeechService SpeechService => _speechService;
 
         public MainViewModel(DataService dataService, AudioService audioService)
@@ -219,6 +310,8 @@ namespace SahneSenin.ViewModels
             ConfirmAnswerCommand = new RelayCommand(ExecuteConfirmAnswer, CanConfirmAnswer);
             GoToGuessPhaseCommand = new RelayCommand(ExecuteGoToGuessPhase, CanGoToGuessPhase);
             NextAttemptCommand = new RelayCommand(ExecuteNextAttempt);
+            ToggleLeaderboardCommand = new RelayCommand(ExecuteToggleLeaderboard);
+            UseJokerCommand = new RelayCommand(ExecuteUseJoker, CanUseJokerCommandExecution);
 
             LoadInitialData();
         }
@@ -227,6 +320,13 @@ namespace SahneSenin.ViewModels
         {
             var data = _dataService.LoadData();
             
+            // Resolve photo paths for each teacher
+            string photosDir = _dataService.GetTeacherPhotosDirectory();
+            foreach (var teacher in data.Teachers)
+            {
+                teacher.PhotoPath = ResolveTeacherPhoto(photosDir, teacher.Name);
+            }
+
             Teachers = new ObservableCollection<Teacher>(data.Teachers);
             UpdateUnplayedTeachers();
 
@@ -238,6 +338,25 @@ namespace SahneSenin.ViewModels
             {
                 CurrentState = GameState.Setup;
             }
+        }
+
+        private string? ResolveTeacherPhoto(string photosDir, string teacherName)
+        {
+            if (!Directory.Exists(photosDir)) return null;
+
+            // Look for teacherName.png, teacherName.jpg, teacherName.jpeg
+            string[] extensions = { ".png", ".jpg", ".jpeg" };
+            foreach (var ext in extensions)
+            {
+                // Replace invalid path characters just in case
+                string safeName = string.Join("_", teacherName.Split(Path.GetInvalidFileNameChars()));
+                string path = Path.Combine(photosDir, safeName + ext);
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+            return null;
         }
 
         private void UpdateUnplayedTeachers()
@@ -278,6 +397,7 @@ namespace SahneSenin.ViewModels
                 {
                     teacher.Score = 0;
                     teacher.HasPlayed = false;
+                    teacher.IsJokerUsed = false;
                 }
                 _dataService.SaveData(data);
                 LoadInitialData();
@@ -302,6 +422,13 @@ namespace SahneSenin.ViewModels
             IsSpinCompleted = false;
             CurrentAttempt = 1;
             _playedSongsInTurn.Clear();
+            
+            // Reset gameplay options
+            IsRiskActive = false;
+            UseAllArtistsPool = false;
+            CurrentStreak = 0;
+            ExtraSelectedArtist = null;
+            OnPropertyChanged(nameof(AvailableExtraArtists));
 
             // Mark as played immediately in local memory so they won't be spun again
             var match = Teachers.FirstOrDefault(t => t.Name == chosenTeacher.Name);
@@ -338,22 +465,48 @@ namespace SahneSenin.ViewModels
         {
             if (CurrentTeacher == null) return;
 
-            // Reset countdown values
-            CountdownProgress = 10.0;
-            CountdownText = "10";
+            // Load settings and apply dynamically
+            var settings = AppSettings.Load();
+            _audioService.SetPlayDuration(settings.ListeningDuration);
+            MaxCountdown = settings.ListeningDuration;
+            CountdownProgress = settings.ListeningDuration;
+            CountdownText = settings.ListeningDuration.ToString();
             IsConfettiActive = false;
 
-            // Find songs from SelectedArtists
+            // Find songs from SelectedArtists or entire pool depending on choice
             var data = _dataService.LoadData();
             var availableSongs = new List<string>();
 
-            foreach (var artist in CurrentTeacher.SelectedArtists)
+            if (UseAllArtistsPool)
             {
-                if (data.Artists.TryGetValue(artist, out var songs))
+                var allScan = _dataService.ScanMusicPool();
+                foreach (var artistSongs in allScan.Values)
                 {
-                    foreach (var song in songs)
+                    availableSongs.AddRange(artistSongs);
+                }
+            }
+            else
+            {
+                foreach (var artist in CurrentTeacher.SelectedArtists)
+                {
+                    if (data.Artists.TryGetValue(artist, out var songs))
                     {
-                        availableSongs.Add(song);
+                        foreach (var song in songs)
+                        {
+                            availableSongs.Add(song);
+                        }
+                    }
+                }
+
+                // Add extra selected artist songs if set
+                if (!string.IsNullOrEmpty(ExtraSelectedArtist))
+                {
+                    if (data.Artists.TryGetValue(ExtraSelectedArtist, out var extraSongs))
+                    {
+                        foreach (var song in extraSongs)
+                        {
+                            availableSongs.Add(song);
+                        }
                     }
                 }
             }
@@ -457,7 +610,8 @@ namespace SahneSenin.ViewModels
 
         private void AudioService_Tick(double elapsedSeconds)
         {
-            double remaining = Math.Max(0.0, 10.0 - elapsedSeconds);
+            var settings = AppSettings.Load();
+            double remaining = Math.Max(0.0, settings.ListeningDuration - elapsedSeconds);
             CountdownProgress = remaining;
             
             // Round up for visual timer text, but show 0 if finished
@@ -490,27 +644,33 @@ namespace SahneSenin.ViewModels
 
             _audioService.Stop();
             _guessTimer?.Stop();
+            IsTimerCritical = false;
             _speechService.StopListening();
 
             if (gradeType == "Correct")
             {
-                pointsToAdd = 10;
-                ScoreStatusText = "Tebrikler! Bildiniz.";
+                int baseCorrect = UseAllArtistsPool ? 20 : 10;
+                pointsToAdd = IsRiskActive ? baseCorrect * 2 : baseCorrect;
+                ScoreStatusText = IsRiskActive ? $"RİSK TUTTU! Bildiniz (+{pointsToAdd})." : $"Tebrikler! Bildiniz (+{pointsToAdd}).";
                 _audioService.PlaySfx("correct");
+                CurrentStreak++;
             }
             else if (gradeType == "Bonus")
             {
-                pointsToAdd = 15;
-                ScoreStatusText = "Harika Söyledi! Bonus Puan.";
+                int baseBonus = UseAllArtistsPool ? 40 : 15;
+                pointsToAdd = baseBonus;
+                ScoreStatusText = $"Harika Söyledi! Bonus Puan (+{pointsToAdd}).";
                 IsConfettiActive = true;
                 _audioService.PlaySfx("confetti");
                 ConfettiTriggered?.Invoke();
+                CurrentStreak++;
             }
             else // Wrong
             {
-                pointsToAdd = 0;
-                ScoreStatusText = "Bilemedi!";
+                pointsToAdd = IsRiskActive ? -5 : 0;
+                ScoreStatusText = IsRiskActive ? $"RİSK KAYBEDİLDİ! Bilemedi ({pointsToAdd})." : "Bilemedi!";
                 _audioService.PlaySfx("wrong");
+                CurrentStreak = 0;
             }
 
             // Update score
@@ -537,7 +697,12 @@ namespace SahneSenin.ViewModels
             SecretSongName = string.Empty;
             CurrentArtist = string.Empty;
             IsSpinCompleted = false;
+            IsRiskActive = false;
+            UseAllArtistsPool = false;
+            CurrentStreak = 0;
+            ExtraSelectedArtist = null;
             _guessTimer?.Stop();
+            IsTimerCritical = false;
             _speechService.StopListening();
             CurrentState = GameState.TeacherSelection;
         }
@@ -593,10 +758,14 @@ namespace SahneSenin.ViewModels
 
             GenerateChoices(_currentSongFile);
 
+            var settings = AppSettings.Load();
             SelectedAnswer = null;
-            _guessRemainingSeconds = 10.0;
-            CountdownProgress = 10.0;
-            CountdownText = "10";
+            _guessRemainingSeconds = settings.GuessingDuration;
+            MaxCountdown = settings.GuessingDuration;
+            CountdownProgress = settings.GuessingDuration;
+            CountdownText = settings.GuessingDuration.ToString();
+            _lastTickSeconds = -1;
+            IsTimerCritical = false;
 
             // Update speech grammar dynamically for this round
             var songNames = AnswerChoices.Select(c => c.Text).ToList();
@@ -693,12 +862,24 @@ namespace SahneSenin.ViewModels
             _guessRemainingSeconds = Math.Max(0.0, _guessRemainingSeconds - 0.1);
             CountdownProgress = _guessRemainingSeconds;
             
+            IsTimerCritical = _guessRemainingSeconds <= 3.0 && _guessRemainingSeconds > 0.0;
+
             int secondsVal = (int)Math.Ceiling(_guessRemainingSeconds);
-            CountdownText = secondsVal.ToString();
+            if (secondsVal != _lastTickSeconds)
+            {
+                _lastTickSeconds = secondsVal;
+                CountdownText = secondsVal.ToString();
+                
+                if (secondsVal <= 3 && secondsVal > 0)
+                {
+                    _audioService.PlaySfx("tick");
+                }
+            }
 
             if (_guessRemainingSeconds <= 0.0)
             {
                 _guessTimer?.Stop();
+                IsTimerCritical = false;
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     var selected = AnswerChoices.FirstOrDefault(c => c.IsSelected);
@@ -736,6 +917,42 @@ namespace SahneSenin.ViewModels
                 Teachers = Teachers.ToList()
             };
             _dataService.SaveData(data);
+        }
+
+        private void ExecuteToggleLeaderboard()
+        {
+            IsLeaderboardVisible = !IsLeaderboardVisible;
+        }
+
+        private bool CanUseJokerCommandExecution()
+        {
+            return CanUseJoker;
+        }
+
+        private void ExecuteUseJoker()
+        {
+            if (CurrentTeacher == null || CurrentTeacher.IsJokerUsed || CurrentState != GameState.GuessPhase) return;
+
+            CurrentTeacher.IsJokerUsed = true;
+            SaveGameData();
+
+            var wrongChoices = AnswerChoices.Where(c => !c.IsCorrect).ToList();
+            if (wrongChoices.Count >= 2)
+            {
+                var rand = new Random();
+                var toHide = wrongChoices.OrderBy(x => rand.Next()).Take(2).ToList();
+                foreach (var choice in toHide)
+                {
+                    choice.IsHidden = true;
+                }
+            }
+
+            // Exclude the hidden choices from speech recognition
+            var remainingChoices = AnswerChoices.Where(c => !c.IsHidden).Select(c => c.Text).ToList();
+            _speechService.UpdateChoices(remainingChoices);
+
+            OnPropertyChanged(nameof(CanUseJoker));
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         }
     }
 }

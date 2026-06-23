@@ -32,5 +32,12 @@ namespace SahneSenin.ViewModels
             get => _isCorrect;
             set => SetProperty(ref _isCorrect, value);
         }
+
+        private bool _isHidden;
+        public bool IsHidden
+        {
+            get => _isHidden;
+            set => SetProperty(ref _isHidden, value);
+        }
     }
 }

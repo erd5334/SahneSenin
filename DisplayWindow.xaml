@@ -6,7 +6,8 @@
         mc:Ignorable="d"
         Title="Sahne Senin - TV Ekranı" Height="600" Width="800"
         Background="{StaticResource WindowBgGradient}"
-        WindowStyle="None" WindowState="Normal">
+        WindowStyle="None" WindowState="Normal"
+        KeyDown="Window_KeyDown" MouseDoubleClick="Window_MouseDoubleClick" Focusable="True">
 
     <Window.Resources>
         <!-- State-based Visibility Styles for TV Screen -->
@@ -128,15 +129,46 @@
                             </Style>
                         </Border.Style>
                         <StackPanel>
+                            <!-- Avatar / Photo -->
+                            <Grid Height="80" Width="80" Margin="0,0,0,10" HorizontalAlignment="Center">
+                                <Border CornerRadius="40" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="80" Width="80" Effect="{StaticResource CyanGlow}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentTeacher.HasPhoto}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Image Source="{Binding CurrentTeacher.PhotoPath}" Stretch="UniformToFill"/>
+                                </Border>
+                                <Border CornerRadius="40" BorderThickness="2" BorderBrush="{StaticResource NeonPinkBrush}" Height="80" Width="80" Effect="{StaticResource PinkGlow}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource PinkGradient}"/>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentTeacher.HasPhoto}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
                             <TextBlock Text="SEÇİLEN YARIŞMACI" FontSize="14" FontWeight="Bold"
-                                       Foreground="{StaticResource NeonCyanBrush}"
-                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        Foreground="{StaticResource NeonCyanBrush}"
+                                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="56" FontWeight="Bold"
-                                       Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
-                                       Effect="{StaticResource PinkGlow}"/>
+                                        Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
+                                        Effect="{StaticResource PinkGlow}"/>
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
-                                       FontSize="14" Foreground="{StaticResource TextMutedBrush}"
-                                       HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
+                                        FontSize="14" Foreground="{StaticResource TextMutedBrush}"
+                                        HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -156,20 +188,508 @@
                     <TextBlock Text="SAHNE SENDE!" Style="{StaticResource TitleText}" FontSize="36" Foreground="{StaticResource NeonCyanBrush}" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}"/>
                     <TextBlock Text="{Binding CurrentAttempt, StringFormat='Hak: {0} / 3'}" Foreground="{StaticResource NeonYellowBrush}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}" Margin="0,5,0,0"/>
                     <TextBlock Text="Şarkıyı tahmin et ve puanı kap!" Style="{StaticResource SubTitleText}" FontSize="18" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <!-- Mode/Risk Badges -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <Border Background="#20FFE600" BorderBrush="{StaticResource NeonYellowBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UseAllArtistsPool}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="TÜM SANATÇILAR (2x PUAN)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}"/>
+                        </Border>
+                        <Border Background="#20FF007F" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRiskActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="🔥 RİSK ALINDI (-5 / +2x)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
 
-                <!-- Contestant Name -->
-                <Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource GlassCard}" BorderBrush="{StaticResource NeonPinkBrush}" Padding="40,35" Effect="{StaticResource PinkGlow}">
-                    <StackPanel>
-                        <TextBlock Text="YARIŞMACI" Foreground="{StaticResource TextMutedBrush}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                        <TextBlock Text="{Binding CurrentTeacher.Name}" Foreground="White" FontSize="72" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
+                <!-- Contestant Name Stack with Win Streak Pulsing -->
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Border Padding="40,35">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                                <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
+                                <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStreakActive}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource NeonOrangeBrush}"/>
+                                        <Setter Property="Effect" Value="{StaticResource OrangeGlow}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="PulseCard">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                     From="1.0" To="1.03" Duration="0:0:0.8"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                     From="1.0" To="1.03" Duration="0:0:0.8"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="PulseCard"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <!-- Teacher Photo or Initials Avatar -->
+                            <Grid Height="120" Width="120" Margin="0,0,0,15" HorizontalAlignment="Center">
+                                <!-- Photo Image (Visible if HasPhoto is true) -->
+                                <Border CornerRadius="60" BorderThickness="3" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="120" Width="120" Effect="{StaticResource CyanGlow}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentTeacher.HasPhoto}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Image Source="{Binding CurrentTeacher.PhotoPath}" Stretch="UniformToFill"/>
+                                </Border>
+                                
+                                <!-- Initials Avatar (Visible if HasPhoto is false) -->
+                                <Border CornerRadius="60" BorderThickness="3" BorderBrush="{StaticResource NeonPinkBrush}" Height="120" Width="120" Effect="{StaticResource PinkGlow}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource PinkGradient}"/>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentTeacher.HasPhoto}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="44" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock Text="YARIŞMACI" Foreground="{StaticResource TextMutedBrush}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="{Binding CurrentTeacher.Name}" Foreground="White" FontSize="72" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Pulse Streak Badge -->
+                    <Border Background="#25FF5E00" BorderBrush="{StaticResource NeonOrangeBrush}" BorderThickness="2" CornerRadius="8" Padding="15,8" HorizontalAlignment="Center" Margin="0,15,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Effect" Value="{StaticResource OrangeGlow}"/>
+                                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStreakActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="PulseBadge">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                     From="1.0" To="1.1" Duration="0:0:0.5"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                     From="1.0" To="1.1" Duration="0:0:0.5"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="PulseBadge"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🔥 ALEV ALDI! " FontSize="18" FontWeight="Bold" Foreground="{StaticResource NeonOrangeBrush}"/>
+                            <TextBlock Text="{Binding CurrentStreak, StringFormat='{}{0} ŞARKI SERİSİ!'}" FontSize="18" FontWeight="Black" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
                 <!-- 10 Seconds Giant Timer -->
                 <StackPanel Grid.Row="2" Margin="0,0,0,40">
-                    <TextBlock Text="{Binding CountdownText}" FontSize="130" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}" Effect="{StaticResource PinkGlow}" HorizontalAlignment="Center" Margin="0,0,0,-20"/>
-                    <ProgressBar Value="{Binding CountdownProgress}" Maximum="10" Height="25" Width="600" Foreground="{StaticResource NeonPinkBrush}" Background="#25000000" BorderBrush="#35FFFFFF" HorizontalAlignment="Center"/>
+                    <!-- Simulated Audio Visualizer (Visible during audio play) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Height="60" Margin="0,0,0,15">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <!-- Bar 1 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonCyanBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B1">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.1" To="1.0" Duration="0:0:0.35" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B1"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 2 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonPinkBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B2">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.2" To="0.8" Duration="0:0:0.45" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B2"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 3 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonYellowBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B3">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.15" To="0.9" Duration="0:0:0.25" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B3"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 4 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonGreenBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B4">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.3" To="1.0" Duration="0:0:0.5" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B4"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 5 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonCyanBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B5">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.1" To="0.75" Duration="0:0:0.38" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B5"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 6 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonPinkBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B6">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.25" To="0.95" Duration="0:0:0.42" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B6"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 7 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonYellowBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B7">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.05" To="0.85" Duration="0:0:0.28" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B7"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 8 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonGreenBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B8">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.2" To="1.0" Duration="0:0:0.47" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B8"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 9 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonCyanBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B9">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.15" To="0.7" Duration="0:0:0.33" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B9"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 10 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonPinkBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B10">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.3" To="0.9" Duration="0:0:0.52" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B10"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 11 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonYellowBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B11">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.1" To="0.8" Duration="0:0:0.31" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B11"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <!-- Bar 12 -->
+                        <Rectangle Width="5" Margin="3" Fill="{StaticResource NeonGreenBrush}" RadiusX="2" RadiusY="2" Height="50" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform ScaleY="1"/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAudioPlaying}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="B12">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.2" To="0.95" Duration="0:0:0.41" AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="B12"/>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding CountdownText}" FontSize="130" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,-20">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                        <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="FlashText">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1.0" To="0.1" Duration="0:0:0.25"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="FlashText"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ProgressBar Value="{Binding CountdownProgress}" Maximum="{Binding MaxCountdown}" Height="25" Width="600" Background="#25000000" BorderBrush="#35FFFFFF" HorizontalAlignment="Center">
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar">
+                                <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="FlashBar">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1.0" To="0.3" Duration="0:0:0.25"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="FlashBar"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
                 </StackPanel>
             </Grid>
 
@@ -186,6 +706,75 @@
                     <TextBlock Text="SAHNE SENDE - TAHMİN ZAMANI!" Style="{StaticResource TitleText}" FontSize="36" Foreground="{StaticResource NeonGreenBrush}" HorizontalAlignment="Center" Effect="{StaticResource GreenGlow}"/>
                     <TextBlock Text="{Binding CurrentAttempt, StringFormat='Hak: {0} / 3'}" Foreground="{StaticResource NeonYellowBrush}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}" Margin="0,5,0,0"/>
                     <TextBlock Text="Şıklardan doğru olanı söyle veya harfi seç!" Style="{StaticResource SubTitleText}" FontSize="18" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+
+                    <!-- Pulse Streak Badge (Guess Phase) -->
+                    <Border Background="#25FF5E00" BorderBrush="{StaticResource NeonOrangeBrush}" BorderThickness="2" CornerRadius="6" Padding="10,5" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Effect" Value="{StaticResource OrangeGlow}"/>
+                                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStreakActive}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="PulseBadgeGP">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                     From="1.0" To="1.1" Duration="0:0:0.5"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                     From="1.0" To="1.1" Duration="0:0:0.5"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="PulseBadgeGP"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🔥 ALEV ALDI! " FontSize="14" FontWeight="Bold" Foreground="{StaticResource NeonOrangeBrush}"/>
+                            <TextBlock Text="{Binding CurrentStreak, StringFormat='{}{0} ŞARKI SERİSİ!'}" FontSize="14" FontWeight="Black" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Mode/Risk Badges -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <Border Background="#20FFE600" BorderBrush="{StaticResource NeonYellowBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UseAllArtistsPool}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="TÜM SANATÇILAR (2x PUAN)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}"/>
+                        </Border>
+                        <Border Background="#20FF007F" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRiskActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="🔥 RİSK ALINDI (-5 / +2x)" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- 4 choices in 2x2 grid -->
@@ -208,6 +797,25 @@
                                     <DataTrigger Binding="{Binding AnswerChoices[0].IsSelected}" Value="True">
                                         <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                         <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[0].IsHidden}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.8"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[0].IsHidden}" Value="False">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.0"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -232,6 +840,25 @@
                                         <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                         <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[1].IsHidden}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.8"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[1].IsHidden}" Value="False">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.0"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
@@ -254,6 +881,25 @@
                                     <DataTrigger Binding="{Binding AnswerChoices[2].IsSelected}" Value="True">
                                         <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                         <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[2].IsHidden}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.8"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[2].IsHidden}" Value="False">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.0"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -278,6 +924,25 @@
                                         <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
                                         <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[3].IsHidden}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.8"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AnswerChoices[3].IsHidden}" Value="False">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.0"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
@@ -294,8 +959,56 @@
 
                 <!-- 10 Seconds Giant Timer -->
                 <StackPanel Grid.Row="2" Margin="0,0,0,20">
-                    <TextBlock Text="{Binding CountdownText}" FontSize="100" FontWeight="Bold" Foreground="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" HorizontalAlignment="Center" Margin="0,0,0,-15"/>
-                    <ProgressBar Value="{Binding CountdownProgress}" Maximum="10" Height="20" Width="600" Foreground="{StaticResource NeonGreenBrush}" Background="#25000000" BorderBrush="#35FFFFFF" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding CountdownText}" FontSize="100" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,-15">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource NeonGreenBrush}"/>
+                                <Setter Property="Effect" Value="{StaticResource GreenGlow}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                        <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="FlashTextGP">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1.0" To="0.1" Duration="0:0:0.25"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="FlashTextGP"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ProgressBar Value="{Binding CountdownProgress}" Maximum="{Binding MaxCountdown}" Height="20" Width="600" Background="#25000000" BorderBrush="#35FFFFFF" HorizontalAlignment="Center">
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar">
+                                <Setter Property="Foreground" Value="{StaticResource NeonGreenBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTimerCritical}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource NeonPinkBrush}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="FlashBarGP">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1.0" To="0.3" Duration="0:0:0.25"
+                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="FlashBarGP"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
                 </StackPanel>
             </Grid>
 
@@ -331,5 +1044,71 @@
 
         <!-- CONFETTI CANVAS OVERLAY -->
         <Canvas x:Name="ConfettiCanvas" IsHitTestVisible="False" Background="Transparent"/>
+
+        <!-- LEADERBOARD OVERLAY -->
+        <Grid Background="{StaticResource WindowBgGradient}" Panel.ZIndex="998">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLeaderboardVisible}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            
+            <!-- Decorative background glows -->
+            <Ellipse Width="300" Height="300" Fill="#0500F2FE" Margin="-150,-150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <Ellipse Width="400" Height="400" Fill="#05FF007F" Margin="0,0,-200,-200" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+
+            <Grid Margin="50">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,10,0,30">
+                    <TextBlock Text="🏆 LİDERLİK TABLOSU" Style="{StaticResource TitleText}" FontSize="56" HorizontalAlignment="Center" Effect="{StaticResource PinkGlow}"/>
+                    <TextBlock Text="En Yüksek Puanlı Yarışmacılar" Style="{StaticResource SubTitleText}" FontSize="22" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <!-- Scrollable wrap layout for scoreboard cards -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource ModernScrollViewer}">
+                    <ItemsControl ItemsSource="{Binding LeaderboardTeachers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource GlassCard}" Width="280" Height="90" Margin="12" BorderBrush="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <!-- Crown/Star Symbol -->
+                                        <TextBlock Grid.Column="0" Text="⭐" FontSize="22" Foreground="{StaticResource NeonYellowBrush}" VerticalAlignment="Center" Margin="5,0,10,0"/>
+                                        
+                                        <!-- Name -->
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        
+                                        <!-- Score Badge -->
+                                        <TextBlock Grid.Column="2" Text="{Binding Score, StringFormat='{}{0} Puan'}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource PinkGlow}" VerticalAlignment="Center" Margin="10,0,5,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- Blackout Overlay to cover all contents on demand -->
+        <Border x:Name="BlackoutOverlay" Background="Black" Visibility="Collapsed" Panel.ZIndex="999"/>
     </Grid>
 </Window>

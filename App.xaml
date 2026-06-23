@@ -10,6 +10,7 @@
         <Color x:Key="NeonCyan">#00F2FE</Color>
         <Color x:Key="NeonGreen">#00FF87</Color>
         <Color x:Key="NeonYellow">#FFE600</Color>
+        <Color x:Key="NeonOrange">#FF5E00</Color>
         <Color x:Key="TextWhite">#FFFFFF</Color>
         <Color x:Key="TextMuted">#8E8B9F</Color>
 
@@ -20,6 +21,7 @@
         <SolidColorBrush x:Key="NeonCyanBrush" Color="{StaticResource NeonCyan}"/>
         <SolidColorBrush x:Key="NeonGreenBrush" Color="{StaticResource NeonGreen}"/>
         <SolidColorBrush x:Key="NeonYellowBrush" Color="{StaticResource NeonYellow}"/>
+        <SolidColorBrush x:Key="NeonOrangeBrush" Color="{StaticResource NeonOrange}"/>
         <SolidColorBrush x:Key="TextWhiteBrush" Color="{StaticResource TextWhite}"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}"/>
 
@@ -48,6 +50,8 @@
         <DropShadowEffect x:Key="PinkGlow" Color="{StaticResource NeonPink}" BlurRadius="15" ShadowDepth="0" Opacity="0.75"/>
         <DropShadowEffect x:Key="CyanGlow" Color="{StaticResource NeonCyan}" BlurRadius="15" ShadowDepth="0" Opacity="0.75"/>
         <DropShadowEffect x:Key="GreenGlow" Color="{StaticResource NeonGreen}" BlurRadius="15" ShadowDepth="0" Opacity="0.75"/>
+        <DropShadowEffect x:Key="YellowGlow" Color="{StaticResource NeonYellow}" BlurRadius="15" ShadowDepth="0" Opacity="0.75"/>
+        <DropShadowEffect x:Key="OrangeGlow" Color="{StaticResource NeonOrange}" BlurRadius="15" ShadowDepth="0" Opacity="0.75"/>
 
         <!-- Custom Scrollbar Template for dark theme -->
         <Style x:Key="ModernScrollViewer" TargetType="ScrollViewer">
@@ -165,6 +169,25 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="NeonYellowButton" TargetType="Button" BasedOn="{StaticResource NeonButton}">
+            <Setter Property="BorderBrush" Value="{StaticResource NeonYellowBrush}"/>
+            <Setter Property="Effect" Value="{StaticResource YellowGlow}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#15FFE600"/>
+                    <Setter Property="BorderBrush" Value="#FFFF66"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#30FFE600"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="BorderBrush" Value="{StaticResource TextMutedBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                    <Setter Property="Effect" Value="{x:Null}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- Glassmorphism Card Style -->
         <Style x:Key="GlassCard" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBgBrush}"/>
@@ -173,6 +196,98 @@
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="20"/>
             <Setter Property="Margin" Value="10"/>
+        </Style>
+
+        <!-- Premium Dark MenuItem Style -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="Border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Checkmark Symbol -->
+                                <TextBlock x:Name="Checkmark" Grid.Column="0" Text="✓" Foreground="{StaticResource NeonGreenBrush}" 
+                                           FontWeight="Bold" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                           Visibility="Collapsed"/>
+
+                                <!-- Header Content -->
+                                <ContentPresenter Grid.Column="1" ContentSource="Header" 
+                                                  Margin="{TemplateBinding Padding}" 
+                                                  RecognizesAccessKey="True" VerticalAlignment="Center"/>
+
+                                <!-- Submenu Arrow -->
+                                <TextBlock x:Name="Arrow" Grid.Column="2" Text="▶" Foreground="{StaticResource TextMutedBrush}" 
+                                           FontSize="9" VerticalAlignment="Center" Margin="10,0,5,0"
+                                           Visibility="Collapsed"/>
+
+                                <!-- Popup for Submenus -->
+                                <Popup x:Name="PART_Popup" 
+                                       AllowsTransparency="true" 
+                                       Focusable="false" 
+                                       IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                                       Placement="Right" 
+                                       PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}">
+                                    <Border Background="#1A1733" 
+                                            BorderBrush="#35FFFFFF" 
+                                            BorderThickness="1" 
+                                            CornerRadius="6" 
+                                            Padding="4">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Role based Placement -->
+                            <Trigger Property="Role" Value="TopLevelHeader">
+                                <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
+                                <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="Role" Value="TopLevelItem">
+                                <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
+                                <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <!-- Show Checkmark if Checked -->
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="Checkmark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <!-- Show Arrow if has submenus and is not top level -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding HasItems, RelativeSource={RelativeSource Self}}" Value="true"/>
+                                    <Condition Binding="{Binding Role, RelativeSource={RelativeSource Self}}" Value="SubmenuHeader"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="Arrow" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <!-- Hover / Selection colors -->
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="Border" Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource NeonCyanBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="true">
+                                <Setter TargetName="Border" Property="Background" Value="#30FFFFFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource NeonCyanBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Application.Resources>
 </Application>

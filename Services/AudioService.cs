@@ -115,6 +115,11 @@ namespace SahneSenin.Services
             }
         }
 
+        public void SetPlayDuration(double seconds)
+        {
+            _playDurationMs = seconds * 1000.0;
+        }
+
         public void Stop()
         {
             _timer.Stop();
@@ -159,6 +164,9 @@ namespace SahneSenin.Services
                     break;
                 case "confetti":
                     System.Media.SystemSounds.Question.Play();
+                    break;
+                case "tick":
+                    System.Media.SystemSounds.Beep.Play();
                     break;
             }
         }
