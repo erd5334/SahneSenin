@@ -132,16 +132,7 @@ namespace SahneSenin.ViewModels
         public bool IsSpinCompleted
         {
             get => _isSpinCompleted;
-            set
-            {
-                if (SetProperty(ref _isSpinCompleted, value))
-                {
-                    if (value && CurrentTeacher != null && CurrentState == GameState.TeacherSelection)
-                    {
-                        StartVotingSession(CurrentTeacher.Name);
-                    }
-                }
-            }
+            set => SetProperty(ref _isSpinCompleted, value);
         }
 
         public bool IsServerRunning
@@ -821,6 +812,12 @@ namespace SahneSenin.ViewModels
                 {
                     Teachers[idx] = match;
                 }
+            }
+
+            // Start spectator oylama if it is the 3rd (last) attempt
+            if (IsLastAttempt)
+            {
+                StartVotingSession(CurrentTeacher.Name);
             }
 
             SaveGameData();

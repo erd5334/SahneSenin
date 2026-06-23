@@ -169,48 +169,7 @@
                                         HorizontalAlignment="Center" Margin="0,0,0,5"/>
                             <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="36" FontWeight="Bold"
                                         Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
-                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap"/>
-                            
-                            <!-- SEYİRCİ OYLAMASI PANELİ -->
-                            <Border Margin="0,15,0,15" Padding="15" CornerRadius="12" Background="#1C000000" BorderBrush="{StaticResource NeonCyanBrush}" BorderThickness="1.5" Effect="{StaticResource CyanGlow}">
-                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="380">
-                                    <!-- Badge -->
-                                    <Border CornerRadius="6" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" HorizontalAlignment="Center" Padding="12,4" Margin="0,0,0,12">
-                                        <TextBlock Text="SEYİRCİ OYLAMASI AKTİF" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
-                                    </Border>
-                                    
-                                    <!-- Voting Countdown Status -->
-                                    <TextBlock Text="{Binding VoteStatusText}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" TextAlignment="Center" Margin="0,0,0,12"/>
-                                    
-                                    <!-- QR Code Image (Enlarged) -->
-                                    <Border BorderThickness="3" BorderBrush="White" CornerRadius="12" Padding="6" Background="White" HorizontalAlignment="Center" Margin="0,0,0,12" Effect="{StaticResource CyanGlow}">
-                                        <Image Source="{Binding VoteQrCodeUrl}" Width="180" Height="180" Stretch="Uniform"/>
-                                    </Border>
-
-                                    <!-- Instruction -->
-                                    <TextBlock Text="Kodu okutarak performansı puanlayın!" FontSize="12" Foreground="White" FontWeight="SemiBold" TextAlignment="Center" Margin="0,0,0,8" TextWrapping="Wrap"/>
-                                    
-                                    <!-- Fallback Direct URL -->
-                                    <TextBlock Text="veya tarayıcıya yazın:" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextAlignment="Center" Margin="0,0,0,2"/>
-                                    <TextBlock Text="api.eryazilimci.com/vote" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}" TextAlignment="Center" Margin="0,0,0,12"/>
-                                    
-                                    <!-- Stats Grid -->
-                                    <Grid HorizontalAlignment="Center" Width="320">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock Text="Kullanılan Oy: " FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding VoteCount}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock Text="Ortalama: " FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding VoteAverage, StringFormat={}{0:F1} ★}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
+                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap" Margin="0,0,0,25"/>
 
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
                                         FontSize="12" Foreground="{StaticResource TextMutedBrush}"
@@ -1065,23 +1024,78 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Message Card -->
-                <Border Grid.Row="0" Style="{StaticResource GlassCard}" BorderBrush="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" Width="650" Height="300" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="40">
-                    <Grid>
+                <!-- Container: Side-by-side if Last Attempt, else Centered Card -->
+                <Grid Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Score Card -->
+                    <Border Grid.Column="0" Style="{StaticResource GlassCard}" BorderBrush="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" Width="450" Height="400" Margin="15" Padding="30" VerticalAlignment="Center">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="48" FontWeight="Bold" Foreground="White" TextAlignment="Center" Margin="0,0,0,25"/>
+                            <TextBlock Text="PERFORMANS TAMAMLANDI" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" HorizontalAlignment="Center" Margin="0,0,0,15"/>
                             
-                            <!-- Large Status Text -->
-                            <TextBlock Text="{Binding ScoreStatusText}" FontSize="36" FontWeight="Bold" Foreground="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" TextAlignment="Center" Margin="0,0,0,25"/>
+                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="36" FontWeight="Bold" Foreground="White" TextAlignment="Center" Margin="0,0,0,20" TextWrapping="Wrap"/>
                             
-                            <!-- Updated total score -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="TOPLAM PUAN:" FontSize="20" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="{Binding CurrentTeacher.Score}" FontSize="32" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource CyanGlow}" VerticalAlignment="Center"/>
+                            <!-- Total Score -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+                                <TextBlock Text="TOPLAM PUAN:" FontSize="18" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="{Binding CurrentTeacher.Score}" FontSize="40" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource CyanGlow}" VerticalAlignment="Center"/>
                             </StackPanel>
+
+                            <!-- Grading Status -->
+                            <TextBlock Text="{Binding ScoreStatusText}" FontSize="18" FontWeight="Bold" Foreground="White" TextAlignment="Center" TextWrapping="Wrap"/>
                         </StackPanel>
-                    </Grid>
-                </Border>
+                    </Border>
+
+                    <!-- Right: Seyirci Oylaması Panel (Visible ONLY if IsLastAttempt is True) -->
+                    <Border Grid.Column="1" Margin="15" Padding="20" Width="420" Height="400" CornerRadius="16" Background="#1C000000" BorderBrush="{StaticResource NeonCyanBrush}" BorderThickness="1.5" Effect="{StaticResource CyanGlow}" VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLastAttempt}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <!-- Badge -->
+                            <Border CornerRadius="6" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" HorizontalAlignment="Center" Padding="12,4" Margin="0,0,0,12">
+                                <TextBlock Text="SEYİRCİ PERFORMANS OYLAMASI" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
+                            </Border>
+
+                            <!-- Voting Countdown Status -->
+                            <TextBlock Text="{Binding VoteStatusText}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" TextAlignment="Center" Margin="0,0,0,10"/>
+
+                            <!-- QR Code Image -->
+                            <Border BorderThickness="3" BorderBrush="White" CornerRadius="12" Padding="6" Background="White" HorizontalAlignment="Center" Margin="0,0,0,10" Effect="{StaticResource CyanGlow}">
+                                <Image Source="{Binding VoteQrCodeUrl}" Width="150" Height="150" Stretch="Uniform"/>
+                            </Border>
+
+                            <!-- Direct URL -->
+                            <TextBlock Text="veya tarayıcıya yazın: api.eryazilimci.com/vote" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}" TextAlignment="Center" Margin="0,0,0,12"/>
+
+                            <!-- Stats -->
+                            <Grid HorizontalAlignment="Center" Width="300">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="Oy: " FontSize="13" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding VoteCount}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="Ortalama: " FontSize="13" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding VoteAverage, StringFormat={}{0:F1} ★}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
 
                 <TextBlock Grid.Row="1" Text="{Binding DisplayScoreFooterText}" Foreground="{StaticResource TextMutedBrush}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,0,20"/>
             </Grid>
