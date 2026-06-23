@@ -67,11 +67,22 @@
             
             <!-- STATE: Setup -->
             <Grid Style="{StaticResource SetupVisibleStyle}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="SAHNE SENİN" Style="{StaticResource TitleText}" FontSize="72" HorizontalAlignment="Center" Effect="{StaticResource PinkGlow}" Margin="0,0,0,20"/>
-                    <TextBlock Text="MÜZİK YARIŞMASINA HOŞ GELDİNİZ" Foreground="{StaticResource NeonCyanBrush}" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}" Margin="0,0,0,20"/>
-                    <TextBlock Text="Sunucu listeyi yüklediğinde eğlence başlayacak!" Foreground="{StaticResource TextMutedBrush}" FontSize="18" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                </StackPanel>
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="SAHNE SENİN" Style="{StaticResource TitleText}" FontSize="48" HorizontalAlignment="Center" Effect="{StaticResource PinkGlow}" Margin="0,0,0,5"/>
+                        <TextBlock Text="YARIŞMA YAKINDA BAŞLAYACAK!" Foreground="{StaticResource NeonCyanBrush}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}"/>
+                    </StackPanel>
+
+                    <!-- Rules Infographic Graphic -->
+                    <Border Grid.Row="1" CornerRadius="16" BorderThickness="3" BorderBrush="{StaticResource NeonPinkBrush}" Effect="{StaticResource PinkGlow}" ClipToBounds="True" Background="#15000000" Width="800" Height="450">
+                        <Image Source="competition_rules_infographic.png" Stretch="Uniform"/>
+                    </Border>
+                </Grid>
             </Grid>
 
             <!-- STATE: TeacherSelection (Roulette Wheel / Roll list) -->
