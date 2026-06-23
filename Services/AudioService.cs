@@ -11,6 +11,7 @@ namespace SahneSenin.Services
         private readonly MediaPlayer _sfxPlayer;
         private readonly string _musicPoolPath;
         private readonly DispatcherTimer _timer;
+        private readonly System.Collections.Generic.Dictionary<string, MediaPlayer> _cachedSfx = new(StringComparer.OrdinalIgnoreCase);
         
         private double _playStartTimeSeconds;
         private double _playDurationMs = 10000; // 10 seconds total
@@ -34,6 +35,42 @@ namespace SahneSenin.Services
 
             _musicPlayer.MediaOpened += MusicPlayer_MediaOpened;
             _musicPlayer.MediaFailed += MusicPlayer_MediaFailed;
+
+            // Preload common sound effects to prevent file-opening latency
+            PreloadSfx("tick");
+            PreloadSfx("correct");
+            PreloadSfx("wrong");
+            PreloadSfx("confetti");
+            PreloadSfx("applause");
+        }
+
+        private void PreloadSfx(string sfxName)
+        {
+            try
+            {
+                string sfxKey = sfxName.ToLower();
+                string mp3Path = Path.Combine(_musicPoolPath, $"{sfxName}.mp3");
+                string wavPath = Path.Combine(_musicPoolPath, $"{sfxName}.wav");
+                
+                string? targetPath = null;
+                if (File.Exists(mp3Path)) targetPath = mp3Path;
+                else if (File.Exists(wavPath)) targetPath = wavPath;
+
+                if (targetPath != null)
+                {
+                    var player = new MediaPlayer();
+                    player.Open(new Uri(targetPath));
+                    player.Volume = 1.0;
+                    // Play and immediately stop/pause to buffer the file
+                    player.Play();
+                    player.Stop();
+                    _cachedSfx[sfxKey] = player;
+                }
+            }
+            catch
+            {
+                // Ignore preloading failures
+            }
         }
 
         public void PlaySong(string fileName)
@@ -62,41 +99,27 @@ namespace SahneSenin.Services
                 duration = _musicPlayer.NaturalDuration.TimeSpan.TotalSeconds;
             }
 
-            // If the song is short, start from 0. Else, pick a random second between 0 and duration - 12
-            double startSecond = 0;
-            if (duration > 15)
-            {
-                var rand = new Random();
-                // Avoid starting too close to the end, leave at least 12 seconds
-                startSecond = rand.Next(0, (int)duration - 12);
-            }
+            // Pick a random starting point. Avoid picking too close to the end (leave at least play duration)
+            double maxStart = Math.Max(0.0, duration - (_playDurationMs / 1000.0) - 2.0);
+            var rand = new Random();
+            _playStartTimeSeconds = rand.NextDouble() * maxStart;
 
-            _playStartTimeSeconds = startSecond;
-            _musicPlayer.Position = TimeSpan.FromSeconds(startSecond);
+            _musicPlayer.Position = TimeSpan.FromSeconds(_playStartTimeSeconds);
             _musicPlayer.Play();
             _timer.Start();
         }
 
         private void MusicPlayer_MediaFailed(object? sender, ExceptionEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"Media failed to load: {e.ErrorException.Message}");
-            // Fallback play from start without duration metadata if possible
-            try
-            {
-                _musicPlayer.Play();
-                _timer.Start();
-            }
-            catch
-            {
-                // Silently absorb
-            }
+            System.Diagnostics.Debug.WriteLine($"Music playback failed: {e.ErrorException.Message}");
+            _timer.Stop();
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
-            _elapsedMs += _timer.Interval.TotalMilliseconds;
-
-            // Trigger progress tick (sends elapsed seconds)
+            _elapsedMs += 50;
+            
+            // Invoke progression tick
             Tick?.Invoke(_elapsedMs / 1000.0);
 
             // Handle fade out in the last 1.5 seconds
@@ -129,6 +152,23 @@ namespace SahneSenin.Services
 
         public void PlaySfx(string sfxName)
         {
+            string sfxKey = sfxName.ToLower();
+
+            if (_cachedSfx.TryGetValue(sfxKey, out var player))
+            {
+                try
+                {
+                    player.Stop();
+                    player.Position = TimeSpan.Zero;
+                    player.Play();
+                    return;
+                }
+                catch
+                {
+                    // Fallback to reload
+                }
+            }
+
             // Look for custom sfxName.mp3 or sfxName.wav in MusicPool
             string mp3Path = Path.Combine(_musicPoolPath, $"{sfxName}.mp3");
             string wavPath = Path.Combine(_musicPoolPath, $"{sfxName}.wav");
@@ -141,9 +181,12 @@ namespace SahneSenin.Services
             {
                 try
                 {
-                    _sfxPlayer.Open(new Uri(targetPath));
-                    _sfxPlayer.Volume = 1.0;
-                    _sfxPlayer.Play();
+                    var newPlayer = new MediaPlayer();
+                    newPlayer.Open(new Uri(targetPath));
+                    newPlayer.Volume = 1.0;
+                    
+                    _cachedSfx[sfxKey] = newPlayer;
+                    newPlayer.Play();
                     return;
                 }
                 catch
@@ -153,7 +196,7 @@ namespace SahneSenin.Services
             }
 
             // System sound fallbacks if file not downloaded yet
-            switch (sfxName.ToLower())
+            switch (sfxKey)
             {
                 case "correct":
                 case "applause":

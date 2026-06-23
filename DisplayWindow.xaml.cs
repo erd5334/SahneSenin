@@ -44,6 +44,17 @@ namespace SahneSenin
             new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF00FF"))
         };
 
+        private readonly System.Windows.Media.Brush[] _sliceTextColors = new System.Windows.Media.Brush[]
+        {
+            System.Windows.Media.Brushes.White, // for Pink
+            System.Windows.Media.Brushes.Black, // for Cyan
+            System.Windows.Media.Brushes.Black, // for Green/Lime
+            System.Windows.Media.Brushes.Black, // for Yellow
+            System.Windows.Media.Brushes.White, // for Purple
+            System.Windows.Media.Brushes.Black, // for Orange
+            System.Windows.Media.Brushes.White  // for Magenta
+        };
+
         public DisplayWindow()
         {
             InitializeComponent();
@@ -237,7 +248,10 @@ namespace SahneSenin
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        if (vm.IsSpinCompleted)
+                        // Update the list of teachers on the wheel:
+                        // 1. When we just entered the TeacherSelection state (CurrentState changed)
+                        // 2. When the list of unplayed teachers changed and we are NOT in the middle of a spin.
+                        if (e.PropertyName == nameof(MainViewModel.CurrentState) || vm.IsSpinCompleted)
                         {
                             _currentWheelTeachers = vm.UnplayedTeachers.ToList();
                         }
@@ -308,20 +322,30 @@ namespace SahneSenin
                 };
 
                 // Play tick sound when each slice boundary crosses the pointer (270 degrees)
-                int lastLoggedSliceIndex = -1;
+                double startRotAngle = WheelRotation.Angle;
+                double startRelativeAngle = (270.0 - startRotAngle) % 360.0;
+                if (startRelativeAngle < 0) startRelativeAngle += 360.0;
+                int lastLoggedSliceIndex = (int)(startRelativeAngle / sliceWidth);
+                double lastTickAngle = startRotAngle;
+
                 doubleAnimation.CurrentTimeInvalidated += (s, ev) =>
                 {
                     try
                     {
                         double currentRotAngle = WheelRotation.Angle;
-                        double relativeAngle = (270.0 - currentRotAngle) % 360.0;
-                        if (relativeAngle < 0) relativeAngle += 360.0;
-
-                        int currentSliceIndex = (int)(relativeAngle / sliceWidth);
-                        if (currentSliceIndex != lastLoggedSliceIndex)
+                        // Only play tick if we rotated at least 1.0 degree since last tick (prevents boundary jitter)
+                        if (Math.Abs(currentRotAngle - lastTickAngle) >= 1.0)
                         {
-                            lastLoggedSliceIndex = currentSliceIndex;
-                            vm.AudioService.PlaySfx("tick");
+                            double relativeAngle = (270.0 - currentRotAngle) % 360.0;
+                            if (relativeAngle < 0) relativeAngle += 360.0;
+
+                            int currentSliceIndex = (int)(relativeAngle / sliceWidth);
+                            if (currentSliceIndex != lastLoggedSliceIndex)
+                            {
+                                lastLoggedSliceIndex = currentSliceIndex;
+                                lastTickAngle = currentRotAngle;
+                                vm.AudioService.PlaySfx("tick");
+                            }
                         }
                     }
                     catch
@@ -434,19 +458,22 @@ namespace SahneSenin
                     // On the left half, we flip the text 180 degrees so it's right-side up.
                     bool isLeftHalf = midAngle > 90.0 && midAngle < 270.0;
 
+                    var textBrush = _sliceTextColors[i % _sliceTextColors.Length];
+
                     var tb = new TextBlock
                     {
                         Text = teachersList[i].Name,
-                        Foreground = System.Windows.Media.Brushes.White,
+                        Foreground = textBrush,
                         FontSize = N > 25 ? 9 : (N > 15 ? 11 : 13),
                         FontWeight = FontWeights.Bold,
                         VerticalAlignment = VerticalAlignment.Center,
                         Width = radius - 60, // Maximum text width
                         Height = 20,
-                        // Add a dark drop shadow to make the white text pop on any background color
+                        // Add a drop shadow to make the text pop on any background color
+                        // White text gets black shadow, black text gets white/glow shadow
                         Effect = new System.Windows.Media.Effects.DropShadowEffect
                         {
-                            Color = System.Windows.Media.Colors.Black,
+                            Color = textBrush == System.Windows.Media.Brushes.White ? System.Windows.Media.Colors.Black : System.Windows.Media.Colors.White,
                             BlurRadius = 4,
                             ShadowDepth = 0,
                             Opacity = 0.95
