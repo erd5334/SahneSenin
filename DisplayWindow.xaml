@@ -171,7 +171,12 @@
                                         HorizontalAlignment="Center" Margin="0,0,0,5"/>
                             <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="36" FontWeight="Bold"
                                         Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
-                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap" Margin="0,0,0,25"/>
+                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+                            <!-- Selected Artists -->
+                            <TextBlock Text="{Binding CurrentTeacher.SelectedArtistsText, StringFormat='Sanatçılar: {0}'}" FontSize="16" FontWeight="SemiBold"
+                                        Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
+                                        TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
 
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
                                         FontSize="12" Foreground="{StaticResource TextMutedBrush}"
