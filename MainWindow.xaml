@@ -126,6 +126,7 @@
                 <Button Content="CSV'den Yükle" Command="{Binding LoadCsvCommand}" Style="{StaticResource NeonCyanButton}" Margin="5" Padding="15,8"/>
                 <Button Content="Oyunu Sıfırla" Command="{Binding ResetGameCommand}" Style="{StaticResource NeonButton}" Margin="5" Padding="15,8"/>
                 <Button Content="{Binding LeaderboardButtonText}" Command="{Binding ToggleLeaderboardCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" Margin="5" Padding="15,8"/>
+                <Button Content="🏁 Yarışmayı Bitir" Command="{Binding EndGameCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonPinkBrush}" Margin="5" Padding="15,8"/>
             </StackPanel>
         </Grid>
 

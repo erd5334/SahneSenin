@@ -75,6 +75,7 @@ namespace SahneSenin.ViewModels
         public ICommand NextAttemptCommand { get; }
         public ICommand ToggleLeaderboardCommand { get; }
         public ICommand UseJokerCommand { get; }
+        public ICommand EndGameCommand { get; }
 
         public GameState CurrentState
         {
@@ -312,6 +313,7 @@ namespace SahneSenin.ViewModels
             NextAttemptCommand = new RelayCommand(ExecuteNextAttempt);
             ToggleLeaderboardCommand = new RelayCommand(ExecuteToggleLeaderboard);
             UseJokerCommand = new RelayCommand(ExecuteUseJoker, CanUseJokerCommandExecution);
+            EndGameCommand = new RelayCommand(ExecuteEndGame, CanEndGame);
 
             LoadInitialData();
         }
@@ -997,6 +999,39 @@ namespace SahneSenin.ViewModels
 
             OnPropertyChanged(nameof(CanUseJoker));
             System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
+
+        private bool CanEndGame()
+        {
+            return CurrentState != GameState.Setup && Teachers.Any(t => t.HasPlayed);
+        }
+
+        private void ExecuteEndGame()
+        {
+            var result = System.Windows.MessageBox.Show(
+                "Yarışmayı şimdi sonlandırmak ve kazananı ilan etmek istiyor musunuz?", 
+                "Yarışmayı Bitir", 
+                System.Windows.MessageBoxButton.YesNo, 
+                System.Windows.MessageBoxImage.Question);
+
+            if (result == System.Windows.MessageBoxResult.Yes)
+            {
+                _audioService.Stop();
+                _guessTimer?.Stop();
+                IsTimerCritical = false;
+                _speechService.StopListening();
+
+                IsLeaderboardVisible = true;
+                IsConfettiActive = true;
+                _audioService.PlaySfx("confetti");
+                ConfettiTriggered?.Invoke();
+
+                var winner = Teachers.Where(t => t.HasPlayed).OrderByDescending(t => t.Score).FirstOrDefault();
+                if (winner != null)
+                {
+                    ScoreStatusText = $"Yarışma Bitti! Tebrikler {winner.Name} ({winner.Score} Puan)!";
+                }
+            }
         }
     }
 }
