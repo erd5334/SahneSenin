@@ -1073,18 +1073,18 @@
                     <TextBlock Text="En Yüksek Puanlı Yarışmacılar" Style="{StaticResource SubTitleText}" FontSize="22" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                 </StackPanel>
 
-                <!-- Scrollable wrap layout for scoreboard cards -->
+                <!-- Scrollable vertical layout for scoreboard cards -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource ModernScrollViewer}">
                     <ItemsControl ItemsSource="{Binding LeaderboardTeachers}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource GlassCard}" Width="280" Height="90" Margin="12" BorderBrush="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}">
-                                    <Grid>
+                                <Border Style="{StaticResource GlassCard}" Width="550" Height="70" Margin="8" BorderBrush="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}">
+                                    <Grid Margin="15,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -1092,13 +1092,13 @@
                                         </Grid.ColumnDefinitions>
                                         
                                         <!-- Crown/Star Symbol -->
-                                        <TextBlock Grid.Column="0" Text="⭐" FontSize="22" Foreground="{StaticResource NeonYellowBrush}" VerticalAlignment="Center" Margin="5,0,10,0"/>
+                                        <TextBlock Grid.Column="0" Text="⭐" FontSize="22" Foreground="{StaticResource NeonYellowBrush}" VerticalAlignment="Center" Margin="5,0,15,0"/>
                                         
                                         <!-- Name -->
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="22" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         
                                         <!-- Score Badge -->
-                                        <TextBlock Grid.Column="2" Text="{Binding Score, StringFormat='{}{0} Puan'}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource PinkGlow}" VerticalAlignment="Center" Margin="10,0,5,0"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Score, StringFormat='{}{0} Puan'}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource PinkGlow}" VerticalAlignment="Center" Margin="15,0,5,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

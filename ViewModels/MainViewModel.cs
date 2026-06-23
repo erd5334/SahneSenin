@@ -662,6 +662,10 @@ namespace SahneSenin.ViewModels
             if (gradeType == "Correct")
             {
                 int baseCorrect = UseAllArtistsPool ? 20 : 10;
+                if (!string.IsNullOrEmpty(ExtraSelectedArtist))
+                {
+                    baseCorrect = Math.Max(1, baseCorrect - 3); // Penalty for choosing 4th (extra) artist
+                }
                 pointsToAdd = IsRiskActive ? baseCorrect * 2 : baseCorrect;
                 ScoreStatusText = IsRiskActive ? $"RİSK TUTTU! Bildiniz (+{pointsToAdd})." : $"Tebrikler! Bildiniz (+{pointsToAdd}).";
                 _audioService.PlaySfx("correct");
@@ -670,6 +674,10 @@ namespace SahneSenin.ViewModels
             else if (gradeType == "Bonus")
             {
                 int baseBonus = UseAllArtistsPool ? 40 : 15;
+                if (!string.IsNullOrEmpty(ExtraSelectedArtist))
+                {
+                    baseBonus = Math.Max(1, baseBonus - 3); // Penalty for choosing 4th (extra) artist
+                }
                 pointsToAdd = baseBonus;
                 ScoreStatusText = $"Harika Söyledi! Bonus Puan (+{pointsToAdd}).";
                 IsConfettiActive = true;
@@ -808,8 +816,25 @@ namespace SahneSenin.ViewModels
             CorrectAnswer = correctSongTitle;
 
             var data = _dataService.LoadData();
-            var sameArtistSongs = new List<string>();
-            var otherArtistSongs = new List<string>();
+            
+            // Determine active artists for the current teacher's round
+            var activeArtists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            bool isGeneralPool = UseAllArtistsPool || (CurrentTeacher != null && CurrentTeacher.SelectedArtists.Any(a => string.Equals(a, "Genel", StringComparison.OrdinalIgnoreCase)));
+            
+            if (CurrentTeacher != null && !isGeneralPool)
+            {
+                foreach (var a in CurrentTeacher.SelectedArtists)
+                {
+                    activeArtists.Add(a);
+                }
+                if (!string.IsNullOrEmpty(ExtraSelectedArtist))
+                {
+                    activeArtists.Add(ExtraSelectedArtist);
+                }
+            }
+
+            var candidateSongs = new List<string>();
+            var fallbackSongs = new List<string>();
 
             foreach (var kvp in data.Artists)
             {
@@ -823,25 +848,32 @@ namespace SahneSenin.ViewModels
                     if (string.Equals(title, correctSongTitle, StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    if (string.Equals(artistName, correctArtist, StringComparison.OrdinalIgnoreCase))
+                    if (isGeneralPool || activeArtists.Contains(artistName))
                     {
-                        sameArtistSongs.Add(title);
+                        candidateSongs.Add(title);
                     }
                     else
                     {
-                        otherArtistSongs.Add(title);
+                        fallbackSongs.Add(title);
                     }
                 }
             }
 
             var rand = new Random();
-            sameArtistSongs = sameArtistSongs.OrderBy(x => rand.Next()).ToList();
-            otherArtistSongs = otherArtistSongs.OrderBy(x => rand.Next()).ToList();
+            candidateSongs = candidateSongs.OrderBy(x => rand.Next()).ToList();
+            fallbackSongs = fallbackSongs.OrderBy(x => rand.Next()).ToList();
 
             var wrongChoices = new List<string>();
-            wrongChoices.AddRange(sameArtistSongs.Take(3));
+            wrongChoices.AddRange(candidateSongs.Take(3));
 
-            // If we don't have enough same artist songs, fill with placeholder song titles using the correct artist name
+            // If we don't have enough songs from their active artists, use other artists' songs
+            if (wrongChoices.Count < 3)
+            {
+                int needed = 3 - wrongChoices.Count;
+                wrongChoices.AddRange(fallbackSongs.Take(needed));
+            }
+
+            // Fallback placeholder if archive is extremely small
             if (wrongChoices.Count < 3)
             {
                 int needed = 3 - wrongChoices.Count;
