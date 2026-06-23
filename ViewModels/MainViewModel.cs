@@ -46,6 +46,10 @@ namespace SahneSenin.ViewModels
         private readonly System.Net.Http.HttpClient _httpClient = new();
         private readonly DispatcherTimer _votePollTimer;
 
+        private bool _isServerRunning = true;
+        private bool _isServerToggleEnabled = true;
+        private string _serverStatusText = "Oylama Sunucusu: Yükleniyor...";
+
         private string _currentSongFile = string.Empty;
         private DispatcherTimer? _guessTimer;
         private double _guessRemainingSeconds = 10.0;
@@ -84,6 +88,7 @@ namespace SahneSenin.ViewModels
         public ICommand UseJokerCommand { get; }
         public ICommand EndGameCommand { get; }
         public ICommand CloseCelebrationCommand { get; }
+        public ICommand ToggleServerCommand { get; }
 
         public GameState CurrentState
         {
@@ -121,7 +126,34 @@ namespace SahneSenin.ViewModels
         public bool IsSpinCompleted
         {
             get => _isSpinCompleted;
-            set => SetProperty(ref _isSpinCompleted, value);
+            set
+            {
+                if (SetProperty(ref _isSpinCompleted, value))
+                {
+                    if (value && CurrentTeacher != null && CurrentState == GameState.TeacherSelection)
+                    {
+                        StartVotingSession(CurrentTeacher.Name);
+                    }
+                }
+            }
+        }
+
+        public bool IsServerRunning
+        {
+            get => _isServerRunning;
+            set => SetProperty(ref _isServerRunning, value);
+        }
+
+        public bool IsServerToggleEnabled
+        {
+            get => _isServerToggleEnabled;
+            set => SetProperty(ref _isServerToggleEnabled, value);
+        }
+
+        public string ServerStatusText
+        {
+            get => _serverStatusText;
+            set => SetProperty(ref _serverStatusText, value);
         }
 
         public string VoteQrCodeUrl
@@ -368,8 +400,10 @@ namespace SahneSenin.ViewModels
             UseJokerCommand = new RelayCommand(ExecuteUseJoker, CanUseJokerCommandExecution);
             EndGameCommand = new RelayCommand(ExecuteEndGame, CanEndGame);
             CloseCelebrationCommand = new RelayCommand(ExecuteCloseCelebration);
+            ToggleServerCommand = new RelayCommand(ExecuteToggleServer, CanToggleServer);
 
             LoadInitialData();
+            InitializeServerStatusAsync();
         }
 
         private void LoadInitialData()
@@ -479,8 +513,8 @@ namespace SahneSenin.ViewModels
             CurrentAttempt = 1;
             _playedSongsInTurn.Clear();
 
-            // Start the spectator voting session on the remote server
-            StartVotingSession(chosenTeacher.Name);
+            // Stop the previous voting session on the remote server immediately during spin
+            _ = StopVotingSession();
             
             // Reset gameplay options
             IsRiskActive = false;
@@ -1220,6 +1254,102 @@ namespace SahneSenin.ViewModels
             {
                 // Ignore connection errors
             }
+        }
+
+        private bool CanToggleServer()
+        {
+            return IsServerToggleEnabled;
+        }
+
+        private async void ExecuteToggleServer()
+        {
+            ServerStatusText = "İşlem Yapılıyor...";
+            IsServerToggleEnabled = false;
+
+            try
+            {
+                if (IsServerRunning)
+                {
+                    await RunSshCommandAsync("er \"pm2 stop vote-server\"");
+                }
+                else
+                {
+                    await RunSshCommandAsync("er \"pm2 start vote-server\"");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error toggling server: {ex.Message}");
+            }
+
+            IsServerRunning = await CheckServerStatusAsync();
+            ServerStatusText = IsServerRunning ? "Oylama Sunucusu: AÇIK" : "Oylama Sunucusu: KAPALI";
+            IsServerToggleEnabled = true;
+        }
+
+        private async System.Threading.Tasks.Task RunSshCommandAsync(string arguments)
+        {
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "ssh",
+                        Arguments = arguments,
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    using (var process = System.Diagnostics.Process.Start(startInfo))
+                    {
+                        process?.WaitForExit(6000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"SSH command error: {ex.Message}");
+                }
+            });
+        }
+
+        private async System.Threading.Tasks.Task<bool> CheckServerStatusAsync()
+        {
+            return await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "ssh",
+                        Arguments = "er \"pm2 describe vote-server\"",
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    using (var process = System.Diagnostics.Process.Start(startInfo))
+                    {
+                        if (process == null) return false;
+                        string output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit(5000);
+                        return output.Contains("online");
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+        }
+
+        private async void InitializeServerStatusAsync()
+        {
+            IsServerToggleEnabled = false;
+            IsServerRunning = await CheckServerStatusAsync();
+            ServerStatusText = IsServerRunning ? "Oylama Sunucusu: AÇIK" : "Oylama Sunucusu: KAPALI";
+            IsServerToggleEnabled = true;
         }
     }
 }

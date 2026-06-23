@@ -123,6 +123,24 @@
                     </MenuItem>
                 </Menu>
                 
+                <Button Content="{Binding ServerStatusText}" Command="{Binding ToggleServerCommand}" Margin="5" Padding="15,8">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource NeonButton}">
+                            <Setter Property="BorderBrush" Value="{StaticResource NeonPinkBrush}"/>
+                            <Setter Property="Effect" Value="{StaticResource PinkGlow}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource NeonGreenBrush}"/>
+                                    <Setter Property="Effect" Value="{StaticResource GreenGlow}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsServerToggleEnabled}" Value="False">
+                                    <Setter Property="BorderBrush" Value="{StaticResource NeonCyanBrush}"/>
+                                    <Setter Property="Effect" Value="{StaticResource CyanGlow}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="CSV'den Yükle" Command="{Binding LoadCsvCommand}" Style="{StaticResource NeonCyanButton}" Margin="5" Padding="15,8"/>
                 <Button Content="Oyunu Sıfırla" Command="{Binding ResetGameCommand}" Style="{StaticResource NeonButton}" Margin="5" Padding="15,8"/>
                 <Button Content="{Binding LeaderboardButtonText}" Command="{Binding ToggleLeaderboardCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" Margin="5" Padding="15,8"/>
