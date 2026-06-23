@@ -59,7 +59,7 @@ namespace SahneSenin.ViewModels
 
         // Events for UI animation triggers
         public event EventHandler<Teacher>? SpinStarted;
-        public event Action? ConfettiTriggered;
+        public event Action<double>? ConfettiTriggered;
 
         // Commands
         public ICommand LoadCsvCommand { get; }
@@ -76,6 +76,7 @@ namespace SahneSenin.ViewModels
         public ICommand ToggleLeaderboardCommand { get; }
         public ICommand UseJokerCommand { get; }
         public ICommand EndGameCommand { get; }
+        public ICommand CloseCelebrationCommand { get; }
 
         public GameState CurrentState
         {
@@ -264,6 +265,20 @@ namespace SahneSenin.ViewModels
             set => SetProperty(ref _extraSelectedArtist, value);
         }
 
+        private bool _isWinnerCelebrationVisible;
+        public bool IsWinnerCelebrationVisible
+        {
+            get => _isWinnerCelebrationVisible;
+            set => SetProperty(ref _isWinnerCelebrationVisible, value);
+        }
+
+        private Teacher? _finalWinnerTeacher;
+        public Teacher? FinalWinnerTeacher
+        {
+            get => _finalWinnerTeacher;
+            set => SetProperty(ref _finalWinnerTeacher, value);
+        }
+
         public List<string> AvailableExtraArtists
         {
             get
@@ -314,6 +329,7 @@ namespace SahneSenin.ViewModels
             ToggleLeaderboardCommand = new RelayCommand(ExecuteToggleLeaderboard);
             UseJokerCommand = new RelayCommand(ExecuteUseJoker, CanUseJokerCommandExecution);
             EndGameCommand = new RelayCommand(ExecuteEndGame, CanEndGame);
+            CloseCelebrationCommand = new RelayCommand(ExecuteCloseCelebration);
 
             LoadInitialData();
         }
@@ -684,7 +700,7 @@ namespace SahneSenin.ViewModels
                 ScoreStatusText = $"Harika Söyledi! Bonus Puan (+{pointsToAdd}).";
                 IsConfettiActive = true;
                 _audioService.PlaySfx("confetti");
-                ConfettiTriggered?.Invoke();
+                ConfettiTriggered?.Invoke(7.0); // 7 seconds for standard bonus confetti
                 CurrentStreak++;
             }
             else // Wrong
@@ -1021,17 +1037,30 @@ namespace SahneSenin.ViewModels
                 IsTimerCritical = false;
                 _speechService.StopListening();
 
-                IsLeaderboardVisible = true;
-                IsConfettiActive = true;
-                _audioService.PlaySfx("applause");
-                ConfettiTriggered?.Invoke();
-
                 var winner = Teachers.Where(t => t.HasPlayed).OrderByDescending(t => t.Score).FirstOrDefault();
                 if (winner != null)
                 {
-                    ScoreStatusText = $"Yarışma Bitti! Tebrikler {winner.Name} ({winner.Score} Puan)!";
+                    FinalWinnerTeacher = winner;
+                    IsWinnerCelebrationVisible = true;
+                    IsLeaderboardVisible = false;
+
+                    IsConfettiActive = true;
+                    _audioService.PlaySfx("applause");
+                    ConfettiTriggered?.Invoke(25.0); // 25 seconds confetti for the final winner!
+
+                    ScoreStatusText = $"Yarışma Bitti! Şampiyon: {winner.Name} ({winner.Score} Puan)!";
+                }
+                else
+                {
+                    IsLeaderboardVisible = true;
                 }
             }
+        }
+
+        private void ExecuteCloseCelebration()
+        {
+            IsWinnerCelebrationVisible = false;
+            IsLeaderboardVisible = true;
         }
     }
 }

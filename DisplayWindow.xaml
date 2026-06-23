@@ -1108,6 +1108,89 @@
             </Grid>
         </Grid>
 
+        <!-- WINNER CELEBRATION OVERLAY -->
+        <Grid Background="{StaticResource WindowBgGradient}" Panel.ZIndex="997">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsWinnerCelebrationVisible}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <!-- Decorative background glows -->
+            <Ellipse Width="500" Height="500" Fill="#15FF007F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Trophy Symbol with pulsing animation -->
+                <TextBlock Text="🏆" FontSize="110" HorizontalAlignment="Center" Margin="0,0,0,15" Effect="{StaticResource OrangeGlow}">
+                    <TextBlock.RenderTransformOrigin>0.5,0.5</TextBlock.RenderTransformOrigin>
+                    <TextBlock.RenderTransform>
+                        <ScaleTransform/>
+                    </TextBlock.RenderTransform>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleX)" From="0.85" To="1.15" Duration="0:0:0.8" AutoReverse="True" RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleY)" From="0.85" To="1.15" Duration="0:0:0.8" AutoReverse="True" RepeatBehavior="Forever"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <TextBlock Text="YARIŞMA ŞAMPİYONU" FontSize="32" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" HorizontalAlignment="Center" Margin="0,0,0,25" Effect="{StaticResource PinkGlow}"/>
+
+                <!-- Winner Photo / Avatar -->
+                <Border CornerRadius="100" BorderThickness="5" BorderBrush="{StaticResource NeonYellowBrush}" Width="200" Height="200" HorizontalAlignment="Center" Margin="0,0,0,25" ClipToBounds="True" Effect="{StaticResource OrangeGlow}">
+                    <Grid>
+                        <!-- Photo Image (Visible if HasPhoto is true) -->
+                        <Border CornerRadius="100" ClipToBounds="True">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FinalWinnerTeacher.HasPhoto}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Image Source="{Binding FinalWinnerTeacher.PhotoPath}" Stretch="UniformToFill"/>
+                        </Border>
+                        
+                        <!-- Initials Avatar (Visible if HasPhoto is false) -->
+                        <Border CornerRadius="100" Background="{StaticResource PinkGradient}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FinalWinnerTeacher.HasPhoto}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding FinalWinnerTeacher.Initials}" Foreground="White" FontSize="72" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Winner Name and Score -->
+                <TextBlock Text="{Binding FinalWinnerTeacher.Name}" FontSize="54" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10" Effect="{StaticResource CyanGlow}"/>
+                <TextBlock Text="{Binding FinalWinnerTeacher.Score, StringFormat='{}{0} PUAN'}" FontSize="40" FontWeight="Black" Foreground="{StaticResource NeonGreenBrush}" HorizontalAlignment="Center" Effect="{StaticResource GreenGlow}"/>
+            </StackPanel>
+        </Grid>
+
+
         <!-- Blackout Overlay to cover all contents on demand -->
         <Border x:Name="BlackoutOverlay" Background="Black" Visibility="Collapsed" Panel.ZIndex="999"/>
     </Grid>

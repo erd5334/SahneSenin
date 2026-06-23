@@ -356,7 +356,7 @@ namespace SahneSenin
             return tb;
         }
 
-        private void OnConfettiTriggered()
+        private void OnConfettiTriggered(double duration)
         {
             if (_isAnimatingConfetti) return;
 
@@ -422,8 +422,8 @@ namespace SahneSenin
             _isAnimatingConfetti = true;
             CompositionTarget.Rendering += OnCompositionTargetRendering;
 
-            // Stop confetti animation after 7 seconds
-            var stopTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(7.0) };
+            // Stop confetti animation after specified duration
+            var stopTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(duration) };
             stopTimer.Tick += (s, e) =>
             {
                 stopTimer.Stop();
