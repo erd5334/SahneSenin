@@ -487,13 +487,25 @@ namespace SahneSenin.ViewModels
             }
             else
             {
-                foreach (var artist in CurrentTeacher.SelectedArtists)
+                bool hasGeneral = CurrentTeacher.SelectedArtists.Any(a => string.Equals(a, "Genel", StringComparison.OrdinalIgnoreCase));
+                if (hasGeneral)
                 {
-                    if (data.Artists.TryGetValue(artist, out var songs))
+                    var allScan = _dataService.ScanMusicPool();
+                    foreach (var artistSongs in allScan.Values)
                     {
-                        foreach (var song in songs)
+                        availableSongs.AddRange(artistSongs);
+                    }
+                }
+                else
+                {
+                    foreach (var artist in CurrentTeacher.SelectedArtists)
+                    {
+                        if (data.Artists.TryGetValue(artist, out var songs))
                         {
-                            availableSongs.Add(song);
+                            foreach (var song in songs)
+                            {
+                                availableSongs.Add(song);
+                            }
                         }
                     }
                 }
