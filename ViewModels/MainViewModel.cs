@@ -295,6 +295,7 @@ namespace SahneSenin.ViewModels
         public bool CanUseJoker => CurrentTeacher != null && !CurrentTeacher.IsJokerUsed && CurrentState == GameState.GuessPhase;
 
         public SpeechService SpeechService => _speechService;
+        public AudioService AudioService => _audioService;
 
         public MainViewModel(DataService dataService, AudioService audioService)
         {

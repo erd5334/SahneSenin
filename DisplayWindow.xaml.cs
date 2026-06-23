@@ -31,10 +31,27 @@ namespace SahneSenin
         private bool _isAnimatingConfetti = false;
         private double _screenWidth = 1920;
         private double _screenHeight = 1080;
+        private List<Teacher> _currentWheelTeachers = new();
+
+        private readonly System.Windows.Media.Brush[] _sliceColors = new System.Windows.Media.Brush[]
+        {
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF007F")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00F2FE")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00FF87")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFF000")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#BD00FF")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF5E00")),
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF00FF"))
+        };
 
         public DisplayWindow()
         {
             InitializeComponent();
+            
+            foreach (var brush in _sliceColors)
+            {
+                brush.Freeze();
+            }
             
             Loaded += DisplayWindow_Loaded;
             Unloaded += DisplayWindow_Unloaded;
@@ -164,6 +181,14 @@ namespace SahneSenin
                 vm.SpinStarted += OnSpinStarted;
                 vm.ConfettiTriggered -= OnConfettiTriggered;
                 vm.ConfettiTriggered += OnConfettiTriggered;
+                vm.PropertyChanged -= Vm_PropertyChanged;
+                vm.PropertyChanged += Vm_PropertyChanged;
+
+                if (vm.CurrentState == GameState.TeacherSelection)
+                {
+                    _currentWheelTeachers = vm.UnplayedTeachers.ToList();
+                    DrawWheel();
+                }
             }
         }
 
@@ -173,6 +198,7 @@ namespace SahneSenin
             {
                 oldVm.SpinStarted -= OnSpinStarted;
                 oldVm.ConfettiTriggered -= OnConfettiTriggered;
+                oldVm.PropertyChanged -= Vm_PropertyChanged;
             }
 
             if (e.NewValue is MainViewModel newVm)
@@ -181,6 +207,14 @@ namespace SahneSenin
                 newVm.SpinStarted += OnSpinStarted;
                 newVm.ConfettiTriggered -= OnConfettiTriggered;
                 newVm.ConfettiTriggered += OnConfettiTriggered;
+                newVm.PropertyChanged -= Vm_PropertyChanged;
+                newVm.PropertyChanged += Vm_PropertyChanged;
+
+                if (newVm.CurrentState == GameState.TeacherSelection)
+                {
+                    _currentWheelTeachers = newVm.UnplayedTeachers.ToList();
+                    DrawWheel();
+                }
             }
         }
 
@@ -190,8 +224,27 @@ namespace SahneSenin
             {
                 vm.SpinStarted -= OnSpinStarted;
                 vm.ConfettiTriggered -= OnConfettiTriggered;
+                vm.PropertyChanged -= Vm_PropertyChanged;
             }
             StopConfetti();
+        }
+
+        private void Vm_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MainViewModel.CurrentState) || e.PropertyName == nameof(MainViewModel.UnplayedTeachers))
+            {
+                if (DataContext is MainViewModel vm && vm.CurrentState == GameState.TeacherSelection)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (vm.IsSpinCompleted)
+                        {
+                            _currentWheelTeachers = vm.UnplayedTeachers.ToList();
+                        }
+                        DrawWheel();
+                    });
+                }
+            }
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -207,86 +260,73 @@ namespace SahneSenin
             {
                 if (DataContext is not MainViewModel vm) return;
 
-                // Build scrolling list of names
-                SpinStackPanel.Children.Clear();
-
-                // Set IsSpinCompleted to false when spin starts
                 vm.IsSpinCompleted = false;
 
-                var teachersList = vm.UnplayedTeachers.ToList();
-                if (!teachersList.Any(t => t.Name == selectedTeacher.Name))
-                {
-                    teachersList.Add(selectedTeacher);
-                }
+                // Stop any running animations on rotation
+                WheelRotation.BeginAnimation(RotateTransform.AngleProperty, null);
 
-                // If there's only 1 teacher, make it simple
-                if (teachersList.Count == 1)
+                var teachersList = _currentWheelTeachers;
+                if (teachersList.Count == 0 || !teachersList.Any(t => t.Name == selectedTeacher.Name))
                 {
-                    var tb = CreateNameTextBlock(selectedTeacher.Name);
-                    SpinStackPanel.Children.Add(tb);
-                    vm.IsSpinCompleted = true;
-                    return;
-                }
-
-                // To make scrolling animation long and interesting, repeat names list
-                // We want the scroll animation to land on the selectedTeacher
-                var scrollList = new List<string>();
-                int repeatCount = 5; // Repeat list multiple times
-                
-                for (int r = 0; r < repeatCount; r++)
-                {
-                    foreach (var t in teachersList)
+                    teachersList = vm.UnplayedTeachers.ToList();
+                    if (!teachersList.Any(t => t.Name == selectedTeacher.Name))
                     {
-                        scrollList.Add(t.Name);
+                        teachersList.Add(selectedTeacher);
                     }
+                    _currentWheelTeachers = teachersList;
                 }
 
-                // Shuffle the intermediate names to make it look random, 
-                // but keep the final target name at the very end
-                int totalItems = scrollList.Count;
-                // Place the target teacher at the end index (e.g. totalItems - 3 to look natural)
-                int targetIndex = totalItems - 4;
-                scrollList[targetIndex] = selectedTeacher.Name;
+                // Make sure the wheel displays the current list (including the winner)
+                DrawWheel();
 
-                // Populate the visual StackPanel
-                foreach (var name in scrollList)
-                {
-                    SpinStackPanel.Children.Add(CreateNameTextBlock(name));
-                }
+                int N = teachersList.Count;
+                if (N == 0) return;
 
-                // Create animation
-                double nameHeight = 160; // Each textblock has 160 height (matches XAML)
-                double targetOffset = -targetIndex * nameHeight;
+                int winnerIndex = teachersList.FindIndex(t => t.Name == selectedTeacher.Name);
+                if (winnerIndex < 0) winnerIndex = 0;
 
-                var translate = new TranslateTransform();
-                SpinStackPanel.RenderTransform = translate;
+                double sliceWidth = 360.0 / N;
+                
+                // Align center of selected slice with the top pointer (270 degrees)
+                double winnerMidAngle = winnerIndex * sliceWidth + sliceWidth / 2.0;
+                double baseTargetAngle = 270.0 - winnerMidAngle;
+
+                // Add random offset inside slice (e.g. up to 25% of slice width left or right) for natural physics feel
+                var rand = new Random();
+                double randomOffset = (rand.NextDouble() - 0.5) * (sliceWidth * 0.5);
+
+                double currentAngle = WheelRotation.Angle;
+                // Add 6 full spins
+                double targetAngle = currentAngle + 360.0 * 6 + (baseTargetAngle - (currentAngle % 360.0) + randomOffset);
 
                 var doubleAnimation = new DoubleAnimation
                 {
-                    From = 0,
-                    To = targetOffset,
-                    Duration = TimeSpan.FromSeconds(4.5),
-                    DecelerationRatio = 0.85
+                    From = currentAngle,
+                    To = targetAngle,
+                    Duration = TimeSpan.FromSeconds(5.5),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                 };
 
-                // Play tick sound effects during animation
-                double lastTickedOffset = 0;
+                // Play tick sound when each slice boundary crosses the pointer (270 degrees)
+                int lastLoggedSliceIndex = -1;
                 doubleAnimation.CurrentTimeInvalidated += (s, ev) =>
                 {
                     try
                     {
-                        double currentOffset = translate.Y;
-                        double delta = Math.Abs(currentOffset - lastTickedOffset);
-                        if (delta >= nameHeight)
+                        double currentRotAngle = WheelRotation.Angle;
+                        double relativeAngle = (270.0 - currentRotAngle) % 360.0;
+                        if (relativeAngle < 0) relativeAngle += 360.0;
+
+                        int currentSliceIndex = (int)(relativeAngle / sliceWidth);
+                        if (currentSliceIndex != lastLoggedSliceIndex)
                         {
-                            lastTickedOffset = currentOffset - (currentOffset % nameHeight);
-                            // Play tick sound locally
-                            System.Media.SystemSounds.Hand.Play(); // Short beep/tick
+                            lastLoggedSliceIndex = currentSliceIndex;
+                            vm.AudioService.PlaySfx("tick");
                         }
                     }
                     catch
                     {
-                        // Ignore tick sound exceptions
+                        // Ignore
                     }
                 };
 
@@ -294,66 +334,195 @@ namespace SahneSenin
                 {
                     try
                     {
-                        // Play completion chime
-                        System.Media.SystemSounds.Question.Play();
+                        // Play completion chimes
+                        vm.AudioService.PlaySfx("correct");
 
-                        // Highlight effect (blink the border)
+                        // Highlight flash effect on the wheel container
                         var blinkAnimation = new DoubleAnimation
                         {
                             From = 1.0,
-                            To = 0.3,
+                            To = 0.4,
                             Duration = TimeSpan.FromMilliseconds(200),
                             AutoReverse = true,
                             RepeatBehavior = new RepeatBehavior(3)
                         };
-                        SpinClipBorder.BeginAnimation(OpacityProperty, blinkAnimation);
+                        WheelContainer.BeginAnimation(OpacityProperty, blinkAnimation);
                     }
                     catch
                     {
-                        // Ignore secondary visual exceptions
+                        // Ignore
                     }
                     finally
                     {
-                        // Spin completed. Wait for host to manually start the round.
                         vm.IsSpinCompleted = true;
                     }
                 };
 
-                translate.BeginAnimation(TranslateTransform.YProperty, doubleAnimation);
+                WheelRotation.BeginAnimation(RotateTransform.AngleProperty, doubleAnimation);
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Spin Başlatılamadı Hatası:\n{ex.Message}\n\n{ex.StackTrace}", "Çark Hatası", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Çark Döndürme Hatası:\n{ex.Message}\n\n{ex.StackTrace}", "Çark Hatası", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
-        private TextBlock CreateNameTextBlock(string name)
+        private void DrawWheel()
         {
-            var tb = new TextBlock
+            try
             {
-                Text = name,
-                Height = 160,
-                FontSize = 60,
-                FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.White,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center
+                WheelCanvas.Children.Clear();
+
+                if (DataContext is not MainViewModel vm) return;
+
+                var teachersList = _currentWheelTeachers;
+                if (teachersList.Count == 0)
+                {
+                    teachersList = vm.UnplayedTeachers.ToList();
+                    if (teachersList.Count == 0)
+                    {
+                        teachersList = vm.Teachers.ToList();
+                    }
+                    _currentWheelTeachers = teachersList;
+                }
+                if (teachersList.Count == 0) return;
+
+                int N = teachersList.Count;
+                double sliceWidth = 360.0 / N;
+                double radius = 230; // Canvas size is 460x460, center is 230, 230
+                double centerX = 230;
+                double centerY = 230;
+
+                // 1. Draw all slices first so they don't overlap text labels
+                for (int i = 0; i < N; i++)
+                {
+                    double startAngle = i * sliceWidth;
+                    double endAngle = (i + 1) * sliceWidth;
+
+                    var fillBrush = _sliceColors[i % _sliceColors.Length];
+
+                    if (N == 1)
+                    {
+                        var ellipse = new Ellipse
+                        {
+                            Width = radius * 2,
+                            Height = radius * 2,
+                            Fill = fillBrush,
+                            Stroke = System.Windows.Media.Brushes.Black,
+                            StrokeThickness = 1.5
+                        };
+                        Canvas.SetLeft(ellipse, centerX - radius);
+                        Canvas.SetTop(ellipse, centerY - radius);
+                        WheelCanvas.Children.Add(ellipse);
+                    }
+                    else
+                    {
+                        var slicePath = CreatePieSlice(centerX, centerY, radius, startAngle, endAngle, fillBrush, System.Windows.Media.Brushes.Black);
+                        WheelCanvas.Children.Add(slicePath);
+                    }
+                }
+
+                // 2. Draw all text labels second on top of all slices
+                for (int i = 0; i < N; i++)
+                {
+                    double startAngle = i * sliceWidth;
+                    double midAngle = startAngle + sliceWidth / 2.0;
+
+                    // Normalize angle to [0, 360)
+                    midAngle = (midAngle % 360.0 + 360.0) % 360.0;
+
+                    // Determine if the slice is on the left half of the wheel (90 to 270 degrees)
+                    // On the left half, we flip the text 180 degrees so it's right-side up.
+                    bool isLeftHalf = midAngle > 90.0 && midAngle < 270.0;
+
+                    var tb = new TextBlock
+                    {
+                        Text = teachersList[i].Name,
+                        Foreground = System.Windows.Media.Brushes.White,
+                        FontSize = N > 25 ? 9 : (N > 15 ? 11 : 13),
+                        FontWeight = FontWeights.Bold,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Width = radius - 60, // Maximum text width
+                        Height = 20,
+                        // Add a dark drop shadow to make the white text pop on any background color
+                        Effect = new System.Windows.Media.Effects.DropShadowEffect
+                        {
+                            Color = System.Windows.Media.Colors.Black,
+                            BlurRadius = 4,
+                            ShadowDepth = 0,
+                            Opacity = 0.95
+                        }
+                    };
+
+                    if (isLeftHalf)
+                    {
+                        // Align text to the left (outer edge)
+                        tb.TextAlignment = TextAlignment.Left;
+                        // Place TextBlock to the left of the center (from x = 15 to x = 185)
+                        Canvas.SetLeft(tb, centerX - radius + 15); // radius is 230, so 230 - 230 + 15 = 15
+                        Canvas.SetTop(tb, centerY - 10);
+                        // Rotate 180 degrees extra around the center of the wheel (local coordinates: x = radius - 15, y = 10)
+                        tb.RenderTransform = new RotateTransform(midAngle + 180, radius - 15, 10);
+                    }
+                    else
+                    {
+                        // Align text to the right (outer edge)
+                        tb.TextAlignment = TextAlignment.Right;
+                        // Place TextBlock to the right of the center (from x = 275 to x = 445)
+                        Canvas.SetLeft(tb, centerX + 45); // 230 + 45 = 275
+                        Canvas.SetTop(tb, centerY - 10);
+                        // Rotate around the center of the wheel (local coordinates: x = -45, y = 10)
+                        tb.RenderTransform = new RotateTransform(midAngle, -45, 10);
+                    }
+
+                    WheelCanvas.Children.Add(tb);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error drawing wheel: {ex.Message}");
+            }
+        }
+
+        private Path CreatePieSlice(double centerX, double centerY, double radius, double startAngle, double endAngle, System.Windows.Media.Brush fillBrush, System.Windows.Media.Brush strokeBrush)
+        {
+            var path = new Path
+            {
+                Fill = fillBrush,
+                Stroke = strokeBrush,
+                StrokeThickness = 1.5
             };
 
-            // Safely apply a unique DropShadowEffect instance
-            if (System.Windows.Application.Current.Resources["NeonPink"] is System.Windows.Media.Color pinkColor)
+            var geometry = new PathGeometry();
+            var figure = new PathFigure
             {
-                tb.Effect = new System.Windows.Media.Effects.DropShadowEffect
-                {
-                    Color = pinkColor,
-                    BlurRadius = 15,
-                    ShadowDepth = 0,
-                    Opacity = 0.75
-                };
-            }
+                StartPoint = new System.Windows.Point(centerX, centerY),
+                IsClosed = true
+            };
 
-            return tb;
+            double startRad = startAngle * Math.PI / 180.0;
+            double startX = centerX + radius * Math.Cos(startRad);
+            double startY = centerY + radius * Math.Sin(startRad);
+            figure.Segments.Add(new LineSegment(new System.Windows.Point(startX, startY), true));
+
+            double endRad = endAngle * Math.PI / 180.0;
+            double endX = centerX + radius * Math.Cos(endRad);
+            double endY = centerY + radius * Math.Sin(endRad);
+
+            bool isLargeArc = Math.Abs(endAngle - startAngle) > 180;
+            var arc = new ArcSegment(
+                new System.Windows.Point(endX, endY),
+                new System.Windows.Size(radius, radius),
+                0,
+                isLargeArc,
+                SweepDirection.Clockwise,
+                true
+            );
+            figure.Segments.Add(arc);
+
+            geometry.Figures.Add(figure);
+            path.Data = geometry;
+
+            return path;
         }
 
         private void OnConfettiTriggered(double duration)

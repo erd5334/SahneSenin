@@ -94,26 +94,29 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- The spinning name strip -->
-                    <Border Grid.Row="0" x:Name="SpinClipBorder" Width="700" Height="160" ClipToBounds="True"
-                            CornerRadius="15" BorderThickness="3" BorderBrush="{StaticResource NeonPinkBrush}"
-                            Effect="{StaticResource PinkGlow}" Background="{StaticResource CardBgBrush}">
-                        <Grid>
-                            <StackPanel x:Name="SpinStackPanel" Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Stretch">
-                                <TextBlock Text="ÇARK BEKLENİYOR..." Height="160" FontSize="36" FontWeight="Bold"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           TextAlignment="Center"/>
-                            </StackPanel>
-                            <!-- Side pointer indicators on top of text -->
-                            <Polygon Points="0,0 22,12 0,24" Fill="{StaticResource NeonCyanBrush}"
-                                     HorizontalAlignment="Left" VerticalAlignment="Center"
-                                     Margin="12,0,0,0" Effect="{StaticResource CyanGlow}"/>
-                            <Polygon Points="22,0 0,12 22,24" Fill="{StaticResource NeonCyanBrush}"
-                                     HorizontalAlignment="Right" VerticalAlignment="Center"
-                                     Margin="0,0,12,0" Effect="{StaticResource CyanGlow}"/>
+                    <!-- Circular Spin the Wheel Grid -->
+                    <Grid Grid.Row="0" Width="500" Height="500" Margin="0,10,0,10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <!-- Outer Glowing Rim -->
+                        <Ellipse Width="490" Height="490" Stroke="{StaticResource NeonPinkBrush}" StrokeThickness="5" Effect="{StaticResource PinkGlow}" Fill="#15000000"/>
+                        <Ellipse Width="476" Height="476" Stroke="{StaticResource NeonCyanBrush}" StrokeThickness="2" Effect="{StaticResource CyanGlow}"/>
+
+                        <!-- Rotating Wheel Container -->
+                        <Grid x:Name="WheelContainer" Width="460" Height="460" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <RotateTransform x:Name="WheelRotation" Angle="0"/>
+                            </Grid.RenderTransform>
+                            <!-- The dynamic canvas where slices and texts are generated -->
+                            <Canvas x:Name="WheelCanvas" Width="460" Height="460"/>
                         </Grid>
-                    </Border>
+
+                        <!-- Central Static Cap (Pointer cap) -->
+                        <Ellipse Width="70" Height="70" Fill="{StaticResource CardBgBrush}" Stroke="{StaticResource NeonCyanBrush}" StrokeThickness="3" Effect="{StaticResource CyanGlow}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="🎯" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0" Effect="{StaticResource CyanGlow}"/>
+
+                        <!-- Pointer Arrow at the top (pointing down) -->
+                        <Polygon Points="0,0 30,0 15,30" Fill="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}" 
+                                 HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-12,0,0"/>
+                    </Grid>
 
                     <!-- Winner name shown below the wheel after spin completes -->
                     <Border Grid.Row="1" Margin="0,20,0,0" CornerRadius="12" Padding="30,15"
