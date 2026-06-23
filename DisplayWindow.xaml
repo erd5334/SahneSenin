@@ -181,7 +181,7 @@
 
                     <!-- Far Right: All Artists Pool (shown after spin completes or while waiting) -->
                     <Border Grid.Column="4" BorderBrush="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
-                            CornerRadius="16" Padding="20" Width="280" Height="400" VerticalAlignment="Center">
+                            CornerRadius="16" Padding="15" Width="380" VerticalAlignment="Center">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -203,18 +203,21 @@
                                        Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
                                        HorizontalAlignment="Center" Margin="0,0,0,12"/>
                             
-                            <!-- Scrollable list of system artists -->
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                <ItemsControl ItemsSource="{Binding AllSystemArtists}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Margin="0,0,0,6" Padding="10,6" CornerRadius="8" Background="#12FFFFFF" BorderThickness="1" BorderBrush="#20FFFFFF">
-                                                <TextBlock Text="{Binding}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextAlignment="Center"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                            <!-- 2-Column Grid of System Artists -->
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding AllSystemArtists}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" VerticalAlignment="Top"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="3" Padding="8,6" CornerRadius="6" Background="#12FFFFFF" BorderThickness="1" BorderBrush="#20FFFFFF">
+                                            <TextBlock Text="{Binding}" Foreground="White" FontSize="12" FontWeight="SemiBold" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
                     </Border>
                 </Grid>
