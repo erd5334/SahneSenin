@@ -1023,7 +1023,7 @@ namespace SahneSenin.ViewModels
 
                 IsLeaderboardVisible = true;
                 IsConfettiActive = true;
-                _audioService.PlaySfx("confetti");
+                _audioService.PlaySfx("applause");
                 ConfettiTriggered?.Invoke();
 
                 var winner = Teachers.Where(t => t.HasPlayed).OrderByDescending(t => t.Score).FirstOrDefault();

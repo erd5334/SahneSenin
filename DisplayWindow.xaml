@@ -1043,7 +1043,7 @@
         </Grid>
 
         <!-- CONFETTI CANVAS OVERLAY -->
-        <Canvas x:Name="ConfettiCanvas" IsHitTestVisible="False" Background="Transparent"/>
+        <Canvas x:Name="ConfettiCanvas" IsHitTestVisible="False" Background="Transparent" Panel.ZIndex="999"/>
 
         <!-- LEADERBOARD OVERLAY -->
         <Grid Background="{StaticResource WindowBgGradient}" Panel.ZIndex="998">
