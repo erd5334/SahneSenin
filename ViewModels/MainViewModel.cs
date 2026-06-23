@@ -39,6 +39,13 @@ namespace SahneSenin.ViewModels
         private string _scoreStatusText = string.Empty;
         private bool _isSpinCompleted = false;
 
+        private string _voteQrCodeUrl = string.Empty;
+        private int _voteCount = 0;
+        private double _voteAverage = 0.0;
+        private bool _isVotingActive = false;
+        private readonly System.Net.Http.HttpClient _httpClient = new();
+        private readonly DispatcherTimer _votePollTimer;
+
         private string _currentSongFile = string.Empty;
         private DispatcherTimer? _guessTimer;
         private double _guessRemainingSeconds = 10.0;
@@ -115,6 +122,30 @@ namespace SahneSenin.ViewModels
         {
             get => _isSpinCompleted;
             set => SetProperty(ref _isSpinCompleted, value);
+        }
+
+        public string VoteQrCodeUrl
+        {
+            get => _voteQrCodeUrl;
+            set => SetProperty(ref _voteQrCodeUrl, value);
+        }
+
+        public int VoteCount
+        {
+            get => _voteCount;
+            set => SetProperty(ref _voteCount, value);
+        }
+
+        public double VoteAverage
+        {
+            get => _voteAverage;
+            set => SetProperty(ref _voteAverage, value);
+        }
+
+        public bool IsVotingActive
+        {
+            get => _isVotingActive;
+            set => SetProperty(ref _isVotingActive, value);
         }
 
         public string SecretSongName
@@ -315,6 +346,12 @@ namespace SahneSenin.ViewModels
             };
             _guessTimer.Tick += GuessTimer_Tick;
 
+            _votePollTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1.0)
+            };
+            _votePollTimer.Tick += VotePollTimer_Tick;
+
             // Wire up commands
             LoadCsvCommand = new RelayCommand(ExecuteLoadCsv);
             ResetGameCommand = new RelayCommand(ExecuteResetGame);
@@ -441,6 +478,9 @@ namespace SahneSenin.ViewModels
             IsSpinCompleted = false;
             CurrentAttempt = 1;
             _playedSongsInTurn.Clear();
+
+            // Start the spectator voting session on the remote server
+            StartVotingSession(chosenTeacher.Name);
             
             // Reset gameplay options
             IsRiskActive = false;
@@ -729,9 +769,38 @@ namespace SahneSenin.ViewModels
             CurrentState = GameState.Score;
         }
 
-        private void ExecuteBackToSelection()
+        private async void ExecuteBackToSelection()
         {
             IsConfettiActive = false;
+
+            // Calculate and add spectator bonus score if oylama was active
+            if (CurrentTeacher != null && IsVotingActive)
+            {
+                double finalAvg = await StopVotingSession();
+                int bonusPoints = (int)Math.Round(finalAvg * 3.0); // 1-5 stars -> 3-15 points
+                if (bonusPoints > 0)
+                {
+                    var match = Teachers.FirstOrDefault(t => t.Name == CurrentTeacher.Name);
+                    if (match != null)
+                    {
+                        match.Score += bonusPoints;
+                        int idx = Teachers.IndexOf(match);
+                        if (idx >= 0)
+                        {
+                            Teachers[idx] = match;
+                        }
+
+                        // Show a temporary or final message box notifying of the result
+                        System.Windows.MessageBox.Show(
+                            $"{CurrentTeacher.Name} için seyirci oylaması tamamlandı!\n\nOrtalama Puan: {finalAvg:F1} / 5\nKazanılan Seyirci Bonusu: +{bonusPoints} Puan!",
+                            "Seyirci Oylaması Sonucu",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information
+                        );
+                    }
+                }
+            }
+
             CurrentTeacher = null;
             SecretSongName = string.Empty;
             CurrentArtist = string.Empty;
@@ -1062,6 +1131,95 @@ namespace SahneSenin.ViewModels
         {
             IsWinnerCelebrationVisible = false;
             IsLeaderboardVisible = true;
+        }
+
+        private async void StartVotingSession(string teacherName)
+        {
+            try
+            {
+                VoteCount = 0;
+                VoteAverage = 0.0;
+                IsVotingActive = true;
+
+                // QR Code URL pointing to our remote oylama site
+                string voteUrl = $"https://api.eryazilimci.com/vote/?name={Uri.EscapeDataString(teacherName)}";
+                VoteQrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(voteUrl)}";
+
+                var content = new System.Net.Http.StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(new { name = teacherName }),
+                    System.Text.Encoding.UTF8,
+                    "application/json"
+                );
+
+                await _httpClient.PostAsync("https://api.eryazilimci.com/vote/api/start", content);
+                _votePollTimer.Start();
+            }
+            catch
+            {
+                // Ignore network errors
+            }
+        }
+
+        private async System.Threading.Tasks.Task<double> StopVotingSession()
+        {
+            double finalAverage = VoteAverage;
+            try
+            {
+                _votePollTimer.Stop();
+                IsVotingActive = false;
+
+                // Call status one last time to ensure we have the absolute final votes
+                var response = await _httpClient.GetAsync("https://api.eryazilimci.com/vote/api/status");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    using (var doc = System.Text.Json.JsonDocument.Parse(jsonString))
+                    {
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("average", out var avgProp) && avgProp.TryGetDouble(out double average))
+                        {
+                            finalAverage = average;
+                        }
+                    }
+                }
+
+                // Stop session on server
+                await _httpClient.PostAsync("https://api.eryazilimci.com/vote/api/stop", null);
+            }
+            catch
+            {
+                // Ignore network errors
+            }
+            return finalAverage;
+        }
+
+        private async void VotePollTimer_Tick(object? sender, EventArgs e)
+        {
+            if (CurrentTeacher == null) return;
+            try
+            {
+                var response = await _httpClient.GetAsync("https://api.eryazilimci.com/vote/api/status");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    using (var doc = System.Text.Json.JsonDocument.Parse(jsonString))
+                    {
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("count", out var countProp) && countProp.TryGetInt32(out int count))
+                        {
+                            VoteCount = count;
+                        }
+                        if (root.TryGetProperty("average", out var avgProp) && avgProp.TryGetDouble(out double average))
+                        {
+                            VoteAverage = average;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore connection errors
+            }
         }
     }
 }

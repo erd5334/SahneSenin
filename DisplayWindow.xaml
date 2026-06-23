@@ -169,9 +169,35 @@
                             <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="56" FontWeight="Bold"
                                         Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
                                         Effect="{StaticResource PinkGlow}"/>
+                            
+                            <!-- SEYİRCİ OYLAMASI PANELİ -->
+                            <Border Margin="0,15,0,0" Padding="15" CornerRadius="10" Background="#15000000" BorderBrush="{StaticResource NeonCyanBrush}" BorderThickness="1" Effect="{StaticResource CyanGlow}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <!-- QR Code Image -->
+                                    <Border BorderThickness="2" BorderBrush="White" CornerRadius="8" Padding="5" Background="White" Margin="0,0,20,0">
+                                        <Image Source="{Binding VoteQrCodeUrl}" Width="110" Height="110" Stretch="Uniform"/>
+                                    </Border>
+                                    
+                                    <!-- Stats -->
+                                    <StackPanel VerticalAlignment="Center" Width="250">
+                                        <Border CornerRadius="4" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" HorizontalAlignment="Left" Padding="8,4" Margin="0,0,0,10">
+                                            <TextBlock Text="SEYİRCİ OYLAMASI AKTİF" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="QR kodu telefonunuzla taratın ve sahne performansını puanlayın!" FontSize="12" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Oy Sayısı: " FontSize="14" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding VoteCount}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" Margin="0,0,15,0"/>
+                                            
+                                            <TextBlock Text="Ortalama: " FontSize="14" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding VoteAverage, StringFormat={}{0:F1} ★}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
                                         FontSize="14" Foreground="{StaticResource TextMutedBrush}"
-                                        HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
+                                        HorizontalAlignment="Center" TextAlignment="Center" Margin="0,12,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
