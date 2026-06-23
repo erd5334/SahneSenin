@@ -75,27 +75,28 @@
             </Grid>
 
             <!-- STATE: TeacherSelection (Roulette Wheel / Roll list) -->
+            <!-- STATE: TeacherSelection (Roulette Wheel / Roll list) -->
             <Grid Style="{StaticResource SelectionVisibleStyle}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,20,0,20">
+                <StackPanel Grid.Row="0" Margin="0,20,0,10">
                     <TextBlock Text="SIRADAKİ YARIŞMACI" Style="{StaticResource TitleText}" FontSize="36" HorizontalAlignment="Center" Effect="{StaticResource CyanGlow}"/>
                     <TextBlock Text="Kimin sahnesi olacağını belirleme zamanı!" Style="{StaticResource SubTitleText}" FontSize="18" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>
 
-                <!-- Roulette Scroll Container -->
-                <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                <!-- Side-by-Side Container -->
+                <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20,0,20,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="60"/> <!-- Spacing column -->
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <!-- Circular Spin the Wheel Grid -->
-                    <Grid Grid.Row="0" Width="500" Height="500" Margin="0,10,0,10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Left: Circular Spin the Wheel Grid -->
+                    <Grid Grid.Column="0" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <!-- Outer Glowing Rim -->
                         <Ellipse Width="490" Height="490" Stroke="{StaticResource NeonPinkBrush}" StrokeThickness="5" Effect="{StaticResource PinkGlow}" Fill="#15000000"/>
                         <Ellipse Width="476" Height="476" Stroke="{StaticResource NeonCyanBrush}" StrokeThickness="2" Effect="{StaticResource CyanGlow}"/>
@@ -118,11 +119,11 @@
                                  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-12,0,0"/>
                     </Grid>
 
-                    <!-- Winner name shown below the wheel after spin completes -->
-                    <Border Grid.Row="1" Margin="0,20,0,0" CornerRadius="12" Padding="30,15"
-                            HorizontalAlignment="Center" Background="#20FFFFFF">
+                    <!-- Right: Winner Card (shown after spin completes or while waiting) -->
+                    <Border Grid.Column="2" BorderBrush="{StaticResource NeonPinkBrush}" Effect="{StaticResource PinkGlow}"
+                            CornerRadius="16" Padding="30,25" Width="480" Height="450" VerticalAlignment="Center" HorizontalAlignment="Center">
                         <Border.Style>
-                            <Style TargetType="Border">
+                            <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
@@ -131,7 +132,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <StackPanel>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <!-- Avatar / Photo -->
                             <Grid Height="80" Width="80" Margin="0,0,0,10" HorizontalAlignment="Center">
                                 <Border CornerRadius="40" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="80" Width="80" Effect="{StaticResource CyanGlow}">
@@ -165,39 +166,39 @@
 
                             <TextBlock Text="SEÇİLEN YARIŞMACI" FontSize="14" FontWeight="Bold"
                                         Foreground="{StaticResource NeonCyanBrush}"
-                                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="56" FontWeight="Bold"
+                                        HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="36" FontWeight="Bold"
                                         Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
-                                        Effect="{StaticResource PinkGlow}"/>
+                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap"/>
                             
                             <!-- SEYİRCİ OYLAMASI PANELİ -->
-                            <Border Margin="0,15,0,0" Padding="15" CornerRadius="10" Background="#15000000" BorderBrush="{StaticResource NeonCyanBrush}" BorderThickness="1" Effect="{StaticResource CyanGlow}">
+                            <Border Margin="0,15,0,15" Padding="12" CornerRadius="10" Background="#15000000" BorderBrush="{StaticResource NeonCyanBrush}" BorderThickness="1" Effect="{StaticResource CyanGlow}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <!-- QR Code Image -->
-                                    <Border BorderThickness="2" BorderBrush="White" CornerRadius="8" Padding="5" Background="White" Margin="0,0,20,0">
-                                        <Image Source="{Binding VoteQrCodeUrl}" Width="110" Height="110" Stretch="Uniform"/>
+                                    <Border BorderThickness="2" BorderBrush="White" CornerRadius="8" Padding="4" Background="White" Margin="0,0,15,0">
+                                        <Image Source="{Binding VoteQrCodeUrl}" Width="90" Height="90" Stretch="Uniform"/>
                                     </Border>
                                     
                                     <!-- Stats -->
-                                    <StackPanel VerticalAlignment="Center" Width="250">
-                                        <Border CornerRadius="4" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" HorizontalAlignment="Left" Padding="8,4" Margin="0,0,0,10">
-                                            <TextBlock Text="SEYİRCİ OYLAMASI AKTİF" FontSize="11" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
+                                    <StackPanel VerticalAlignment="Center" Width="220">
+                                        <Border CornerRadius="4" Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource NeonPinkBrush}" BorderThickness="1" HorizontalAlignment="Left" Padding="8,3" Margin="0,0,0,5">
+                                            <TextBlock Text="SEYİRCİ OYLAMASI AKTİF" FontSize="10" FontWeight="Bold" Foreground="{StaticResource NeonPinkBrush}"/>
                                         </Border>
-                                        <TextBlock Text="QR kodu telefonunuzla taratın ve sahne performansını puanlayın!" FontSize="12" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Kodu okutarak performansı puanlayın!" FontSize="11" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Oy Sayısı: " FontSize="14" Foreground="{StaticResource TextMutedBrush}"/>
-                                            <TextBlock Text="{Binding VoteCount}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" Margin="0,0,15,0"/>
+                                            <TextBlock Text="Oy: " FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding VoteCount}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource NeonCyanBrush}" Margin="0,0,10,0"/>
                                             
-                                            <TextBlock Text="Ortalama: " FontSize="14" Foreground="{StaticResource TextMutedBrush}"/>
-                                            <TextBlock Text="{Binding VoteAverage, StringFormat={}{0:F1} ★}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}"/>
+                                            <TextBlock Text="Ortalama: " FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding VoteAverage, StringFormat={}{0:F1} ★}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
 
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
-                                        FontSize="14" Foreground="{StaticResource TextMutedBrush}"
-                                        HorizontalAlignment="Center" TextAlignment="Center" Margin="0,12,0,0"/>
+                                        FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                        HorizontalAlignment="Center" TextAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </Grid>
