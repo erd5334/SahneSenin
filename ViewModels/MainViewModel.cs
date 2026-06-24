@@ -41,6 +41,7 @@ namespace SahneSenin.ViewModels
         private bool _isAudioPlaying = false;
         private string _scoreStatusText = string.Empty;
         private bool _isSpinCompleted = false;
+        private string _correctAnswerText = string.Empty;
 
         private string _voteQrCodeUrl = string.Empty;
         private int _voteCount = 0;
@@ -253,6 +254,12 @@ namespace SahneSenin.ViewModels
         {
             get => _scoreStatusText;
             set => SetProperty(ref _scoreStatusText, value);
+        }
+
+        public string CorrectAnswerText
+        {
+            get => _correctAnswerText;
+            set => SetProperty(ref _correctAnswerText, value);
         }
 
         public string CorrectAnswer
@@ -697,6 +704,7 @@ namespace SahneSenin.ViewModels
         private void StartGameRound()
         {
             if (CurrentTeacher == null) return;
+            CorrectAnswerText = string.Empty;
 
             // Load settings and apply dynamically
             var settings = AppSettings.Load();
@@ -901,6 +909,7 @@ namespace SahneSenin.ViewModels
                 }
                 pointsToAdd = IsRiskActive ? baseCorrect * 2 : baseCorrect;
                 ScoreStatusText = IsRiskActive ? $"RİSK TUTTU! Bildiniz (+{pointsToAdd})." : $"Tebrikler! Bildiniz (+{pointsToAdd}).";
+                CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
                 _audioService.PlaySfx("correct");
                 CurrentStreak++;
             }
@@ -913,6 +922,7 @@ namespace SahneSenin.ViewModels
                 }
                 pointsToAdd = baseBonus;
                 ScoreStatusText = $"Harika Söyledi! Bonus Puan (+{pointsToAdd}).";
+                CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
                 IsConfettiActive = true;
                 _audioService.PlaySfx("confetti");
                 ConfettiTriggered?.Invoke(7.0); // 7 seconds for standard bonus confetti
@@ -922,6 +932,7 @@ namespace SahneSenin.ViewModels
             {
                 pointsToAdd = IsRiskActive ? -5 : 0;
                 ScoreStatusText = IsRiskActive ? $"RİSK KAYBEDİLDİ! Bilemedi ({pointsToAdd})." : "Bilemedi!";
+                CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
                 _audioService.PlaySfx("wrong");
                 CurrentStreak = 0;
             }

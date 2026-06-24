@@ -1172,6 +1172,9 @@
 
                             <!-- Grading Status -->
                             <TextBlock Text="{Binding ScoreStatusText}" FontSize="18" FontWeight="Bold" Foreground="White" TextAlignment="Center" TextWrapping="Wrap"/>
+
+                            <!-- Correct Song Info -->
+                            <TextBlock Text="{Binding CorrectAnswerText}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource NeonCyanBrush}" Effect="{StaticResource CyanGlow}" TextAlignment="Center" Margin="0,15,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
