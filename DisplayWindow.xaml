@@ -147,8 +147,8 @@
                         </Border.Style>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <!-- Avatar / Photo -->
-                            <Grid Height="80" Width="80" Margin="0,0,0,10" HorizontalAlignment="Center">
-                                <Border CornerRadius="40" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="80" Width="80" Effect="{StaticResource CyanGlow}">
+                            <Grid Height="160" Width="160" Margin="0,0,0,15" HorizontalAlignment="Center">
+                                <Border CornerRadius="80" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="160" Width="160" Effect="{StaticResource CyanGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -161,7 +161,7 @@
                                     </Border.Style>
                                     <Image Source="{Binding CurrentTeacher.PhotoPath}" Stretch="UniformToFill"/>
                                 </Border>
-                                <Border CornerRadius="40" BorderThickness="2" BorderBrush="{StaticResource NeonPinkBrush}" Height="80" Width="80" Effect="{StaticResource PinkGlow}">
+                                <Border CornerRadius="80" BorderThickness="2" BorderBrush="{StaticResource NeonPinkBrush}" Height="160" Width="160" Effect="{StaticResource PinkGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{StaticResource PinkGradient}"/>
@@ -173,7 +173,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="56" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                                 </Border>
                             </Grid>
 
@@ -322,9 +322,9 @@
                         </Border.Style>
                         <StackPanel>
                             <!-- Teacher Photo or Initials Avatar -->
-                            <Grid Height="120" Width="120" Margin="0,0,0,15" HorizontalAlignment="Center">
+                            <Grid Height="240" Width="240" Margin="0,0,0,20" HorizontalAlignment="Center">
                                 <!-- Photo Image (Visible if HasPhoto is true) -->
-                                <Border CornerRadius="60" BorderThickness="3" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="120" Width="120" Effect="{StaticResource CyanGlow}">
+                                <Border CornerRadius="120" BorderThickness="3" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="240" Width="240" Effect="{StaticResource CyanGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -339,7 +339,7 @@
                                 </Border>
                                 
                                 <!-- Initials Avatar (Visible if HasPhoto is false) -->
-                                <Border CornerRadius="60" BorderThickness="3" BorderBrush="{StaticResource NeonPinkBrush}" Height="120" Width="120" Effect="{StaticResource PinkGlow}">
+                                <Border CornerRadius="120" BorderThickness="3" BorderBrush="{StaticResource NeonPinkBrush}" Height="240" Width="240" Effect="{StaticResource PinkGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{StaticResource PinkGradient}"/>
@@ -351,7 +351,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="44" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="88" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                                 </Border>
                             </Grid>
 
@@ -1270,10 +1270,10 @@
                 <TextBlock Text="YARIŞMA ŞAMPİYONU" FontSize="32" FontWeight="Bold" Foreground="{StaticResource NeonYellowBrush}" HorizontalAlignment="Center" Margin="0,0,0,25" Effect="{StaticResource PinkGlow}"/>
 
                 <!-- Winner Photo / Avatar -->
-                <Border CornerRadius="100" BorderThickness="5" BorderBrush="{StaticResource NeonYellowBrush}" Width="200" Height="200" HorizontalAlignment="Center" Margin="0,0,0,25" ClipToBounds="True" Effect="{StaticResource OrangeGlow}">
+                <Border CornerRadius="160" BorderThickness="5" BorderBrush="{StaticResource NeonYellowBrush}" Width="320" Height="320" HorizontalAlignment="Center" Margin="0,0,0,30" ClipToBounds="True" Effect="{StaticResource OrangeGlow}">
                     <Grid>
                         <!-- Photo Image (Visible if HasPhoto is true) -->
-                        <Border CornerRadius="100" ClipToBounds="True">
+                        <Border CornerRadius="160" ClipToBounds="True">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -1288,7 +1288,7 @@
                         </Border>
                         
                         <!-- Initials Avatar (Visible if HasPhoto is false) -->
-                        <Border CornerRadius="100" Background="{StaticResource PinkGradient}">
+                        <Border CornerRadius="160" Background="{StaticResource PinkGradient}">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Visibility" Value="Visible"/>
@@ -1299,7 +1299,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <TextBlock Text="{Binding FinalWinnerTeacher.Initials}" Foreground="White" FontSize="72" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding FinalWinnerTeacher.Initials}" Foreground="White" FontSize="110" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
                 </Border>
