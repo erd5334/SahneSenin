@@ -99,13 +99,13 @@
                 </StackPanel>
 
                 <!-- Side-by-Side Container -->
-                <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20,0,20,10">
+                <Grid Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="10,0,10,10">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="60"/> <!-- Spacing column -->
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="40"/> <!-- Spacing column -->
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/> <!-- Left: Wheel -->
+                        <ColumnDefinition Width="*"/>    <!-- Left spacing spring -->
+                        <ColumnDefinition Width="Auto"/> <!-- Center: Winner Card -->
+                        <ColumnDefinition Width="*"/>    <!-- Right spacing spring -->
+                        <ColumnDefinition Width="Auto"/> <!-- Right: Artists Pool -->
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Circular Spin the Wheel Grid -->
@@ -132,9 +132,9 @@
                                  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-12,0,0"/>
                     </Grid>
 
-                    <!-- Right: Winner Card (shown after spin completes or while waiting) -->
+                    <!-- Center: Winner Card (shown after spin completes or while waiting) -->
                     <Border Grid.Column="2" BorderBrush="{StaticResource NeonPinkBrush}" Effect="{StaticResource PinkGlow}"
-                            CornerRadius="16" Padding="30,25" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            CornerRadius="16" Padding="40,30" Width="580" VerticalAlignment="Center" HorizontalAlignment="Center">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -147,8 +147,8 @@
                         </Border.Style>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <!-- Avatar / Photo -->
-                            <Grid Height="160" Width="160" Margin="0,0,0,15" HorizontalAlignment="Center">
-                                <Border CornerRadius="80" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="160" Width="160" Effect="{StaticResource CyanGlow}">
+                            <Grid Height="260" Width="260" Margin="0,0,0,20" HorizontalAlignment="Center">
+                                <Border CornerRadius="130" BorderThickness="2" BorderBrush="{StaticResource NeonCyanBrush}" ClipToBounds="True" Height="260" Width="260" Effect="{StaticResource CyanGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -161,7 +161,7 @@
                                     </Border.Style>
                                     <Image Source="{Binding CurrentTeacher.PhotoPath}" Stretch="UniformToFill"/>
                                 </Border>
-                                <Border CornerRadius="80" BorderThickness="2" BorderBrush="{StaticResource NeonPinkBrush}" Height="160" Width="160" Effect="{StaticResource PinkGlow}">
+                                <Border CornerRadius="130" BorderThickness="2" BorderBrush="{StaticResource NeonPinkBrush}" Height="260" Width="260" Effect="{StaticResource PinkGlow}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{StaticResource PinkGradient}"/>
@@ -173,21 +173,21 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="56" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentTeacher.Initials}" Foreground="White" FontSize="96" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                                 </Border>
                             </Grid>
 
-                            <TextBlock Text="SEÇİLEN YARIŞMACI" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="SEÇİLEN YARIŞMACI" FontSize="16" FontWeight="Bold"
                                         Foreground="{StaticResource NeonCyanBrush}"
-                                        HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="36" FontWeight="Bold"
+                                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding CurrentTeacher.Name}" FontSize="46" FontWeight="Bold"
                                         Foreground="White" TextAlignment="Center" HorizontalAlignment="Center"
-                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        Effect="{StaticResource PinkGlow}" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
                             <!-- Selected Artists -->
-                            <TextBlock Text="{Binding CurrentTeacher.SelectedArtistsText, StringFormat='Sanatçılar: {0}'}" FontSize="16" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding CurrentTeacher.SelectedArtistsText, StringFormat='Sanatçılar: {0}'}" FontSize="18" FontWeight="SemiBold"
                                         Foreground="{StaticResource NeonYellowBrush}" Effect="{StaticResource GreenGlow}"
-                                        TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                                        TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,25"/>
 
                             <TextBlock Text="Sunucu 'Yarışmayı Başlat' butonuna basana kadar bekleniyor..."
                                         FontSize="12" Foreground="{StaticResource TextMutedBrush}"
