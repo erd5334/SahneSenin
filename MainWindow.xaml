@@ -128,6 +128,9 @@
                         <MenuItem Header="Cevap Verme Süresi" x:Name="MenuGuessingDuration" Foreground="White" Background="#1A1733"/>
                         <MenuItem Header="Yansıtmayı Aç/Kapat" x:Name="MenuToggleProj" Foreground="White" Background="#1A1733" Click="MenuToggleProj_Click"/>
                         <MenuItem Header="Kısayol Tuşu Belirle: F12" x:Name="MenuProjShortcut" Foreground="White" Background="#1A1733" Click="MenuProjShortcut_Click"/>
+                        <Separator Background="#3A3753"/>
+                        <MenuItem Header="Müzik Klasörünü Seç (MusicPool)..." x:Name="MenuMusicPoolPath" Foreground="White" Background="#1A1733" Click="MenuMusicPoolPath_Click"/>
+                        <MenuItem Header="Müzik Klasörünü Varsayılana Sıfırla" x:Name="MenuResetMusicPool" Foreground="White" Background="#1A1733" Click="MenuResetMusicPool_Click"/>
                     </MenuItem>
                 </Menu>
                 

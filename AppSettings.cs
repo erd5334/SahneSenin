@@ -13,6 +13,7 @@ namespace SahneSenin
         public Key ProjectionShortcutKey { get; set; } = Key.F12; // Default to F12
         public int ListeningDuration { get; set; } = 10;
         public int GuessingDuration { get; set; } = 10;
+        public string CustomMusicPoolPath { get; set; } = string.Empty;
 
         public static AppSettings Load()
         {

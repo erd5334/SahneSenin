@@ -468,6 +468,11 @@ namespace SahneSenin.ViewModels
             InitializeServerStatusAsync();
         }
 
+        public void RefreshMusicPool()
+        {
+            LoadInitialData();
+        }
+
         private void LoadInitialData()
         {
             var data = _dataService.LoadData();

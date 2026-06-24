@@ -10,19 +10,19 @@ namespace SahneSenin.Services
     public class DataService
     {
         private readonly string _dataFilePath;
-        private readonly string _musicPoolPath;
+        private string _musicPoolPath => ResolveMusicPoolPath();
         private readonly string _teacherPhotosPath;
 
         public DataService()
         {
             _dataFilePath = GetFilePath("data.json");
-            _musicPoolPath = GetFilePath("MusicPool");
             _teacherPhotosPath = GetFilePath("TeacherPhotos");
 
-            // Ensure MusicPool exists
-            if (!Directory.Exists(_musicPoolPath))
+            // Ensure Default MusicPool exists
+            string defaultMusicPool = GetFilePath("MusicPool");
+            if (!Directory.Exists(defaultMusicPool))
             {
-                Directory.CreateDirectory(_musicPoolPath);
+                Directory.CreateDirectory(defaultMusicPool);
             }
 
             // Ensure TeacherPhotos exists
@@ -167,6 +167,20 @@ namespace SahneSenin.Services
             }
 
             return artists;
+        }
+
+        private static string ResolveMusicPoolPath()
+        {
+            try
+            {
+                var settings = AppSettings.Load();
+                if (!string.IsNullOrEmpty(settings.CustomMusicPoolPath) && Directory.Exists(settings.CustomMusicPoolPath))
+                {
+                    return settings.CustomMusicPoolPath;
+                }
+            }
+            catch { }
+            return GetFilePath("MusicPool");
         }
 
         public string GetMusicPoolDirectory()

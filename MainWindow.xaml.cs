@@ -196,5 +196,62 @@ namespace SahneSenin
             }
             catch { }
         }
+
+        private void MenuMusicPoolPath_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var settings = AppSettings.Load();
+                var dialog = new Microsoft.Win32.OpenFolderDialog
+                {
+                    Title = "Müzik Klasörünü (MusicPool) Seçin",
+                    InitialDirectory = string.IsNullOrEmpty(settings.CustomMusicPoolPath) 
+                        ? AppDomain.CurrentDomain.BaseDirectory 
+                        : settings.CustomMusicPoolPath
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    string selectedPath = dialog.FolderName;
+                    if (System.IO.Directory.Exists(selectedPath))
+                    {
+                        settings.CustomMusicPoolPath = selectedPath;
+                        settings.Save();
+
+                        System.Windows.MessageBox.Show($"Müzik klasörü başarıyla ayarlandı:\n{selectedPath}", "Başarılı", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                        if (DataContext is ViewModels.MainViewModel vm)
+                        {
+                            vm.RefreshMusicPool();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Klasör seçilirken bir hata oluştu: {ex.Message}", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void MenuResetMusicPool_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var settings = AppSettings.Load();
+                settings.CustomMusicPoolPath = string.Empty;
+                settings.Save();
+
+                System.Windows.MessageBox.Show("Müzik klasörü varsayılan konuma sıfırlandı.\n(Uygulamanın yanındaki veya proje klasöründeki MusicPool kullanılacak)", "Sıfırlandı", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                if (DataContext is ViewModels.MainViewModel vm)
+                {
+                    vm.RefreshMusicPool();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Sıfırlama yapılırken bir hata oluştu: {ex.Message}", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
     }
 }
