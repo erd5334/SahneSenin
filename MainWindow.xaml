@@ -52,6 +52,14 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="AddTeacherPanelVisibleStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAddTeacherVisible}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="20">
@@ -167,11 +175,14 @@
             
             <!-- STATE: Setup -->
             <Grid x:Name="SetupPanel" Style="{StaticResource SetupVisibleStyle}">
-                <Border Style="{StaticResource GlassCard}" Width="450" Height="250" VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{StaticResource NeonCyanBrush}">
+                <Border Style="{StaticResource GlassCard}" Width="500" Height="270" VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{StaticResource NeonCyanBrush}">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="Öğretmen Listesi Bulunmadı" FontSize="20" HorizontalAlignment="Center" Foreground="{StaticResource TextWhiteBrush}" Margin="0,0,0,20"/>
-                        <TextBlock Text="Lütfen yarışmaya başlamak için sınıf listesini içeren CSV dosyasını yükleyin." TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Width="350" Margin="0,0,0,20"/>
-                        <Button Content="CSV Dosyası Seç" Command="{Binding LoadCsvCommand}" Style="{StaticResource NeonCyanButton}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Lütfen yarışmaya başlamak için sınıf listesini içeren CSV dosyasını yükleyin ya da manuel yarışmacı ekleyin." TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Width="400" Margin="0,0,0,25"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="CSV Dosyası Seç" Command="{Binding LoadCsvCommand}" Style="{StaticResource NeonCyanButton}" Margin="10,0" Padding="15,8"/>
+                            <Button Content="Manuel Yarışmacı Ekle" Command="{Binding ShowAddTeacherCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}" Margin="10,0" Padding="15,8"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -312,6 +323,14 @@
                                 <TextBlock Text="Sırasını Bekleyen:" Foreground="{StaticResource TextMutedBrush}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding UnplayedTeachers.Count}" Foreground="{StaticResource NeonGreenBrush}" FontWeight="Bold"/>
                             </Grid>
+                            <Button Content="➕ Yeni Yarışmacı Ekle" 
+                                    Command="{Binding ShowAddTeacherCommand}" 
+                                    Style="{StaticResource NeonCyanButton}" 
+                                    HorizontalAlignment="Stretch" 
+                                    Margin="0,15,0,0" 
+                                    Padding="10,6" 
+                                    Height="32" 
+                                    FontSize="12"/>
                         </StackPanel>
                     </Border>
 
@@ -863,6 +882,66 @@
                 </Border>
             </Grid>
             
+            <!-- OVERLAY MODAL: Add Teacher Panel -->
+            <Grid Style="{StaticResource AddTeacherPanelVisibleStyle}" Background="#D00D0B1E" Panel.ZIndex="1000">
+                <Border Style="{StaticResource GlassCard}" Width="450" Height="500" VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{StaticResource NeonGreenBrush}" Effect="{StaticResource GreenGlow}">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Title -->
+                            <RowDefinition Height="Auto"/> <!-- Name Label & Input -->
+                            <RowDefinition Height="*"/>    <!-- Artists Header & List -->
+                            <RowDefinition Height="Auto"/> <!-- Buttons -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Title -->
+                        <TextBlock Grid.Row="0" Text="YENİ YARIŞMACI EKLE" FontSize="20" FontWeight="Bold" Foreground="{StaticResource NeonGreenBrush}" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+                        <!-- Name Input -->
+                        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+                            <TextBlock Text="Adı Soyadı:" Foreground="{StaticResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewTeacherName, UpdateSourceTrigger=PropertyChanged}" 
+                                     Background="#15FFFFFF" Foreground="White" BorderBrush="#30FFFFFF" BorderThickness="1" 
+                                     Padding="8,6" FontSize="14" CaretBrush="White"/>
+                        </StackPanel>
+
+                        <!-- Artists List -->
+                        <Grid Grid.Row="2" Margin="0,0,0,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Text="Şarkı Söyleyeceği Sanatçılar (Boş bırakılırsa 'Genel' olarak eklenir):" Foreground="{StaticResource TextMutedBrush}" FontSize="12" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                            
+                            <Border Grid.Row="1" Background="#0AFFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="6" Padding="5">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding AllArtists}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected}" Margin="5,4" Foreground="White" Cursor="Hand">
+                                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13"/>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </Grid>
+
+                        <!-- Actions -->
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Button Grid.Column="0" Content="Vazgeç" Command="{Binding CloseAddTeacherCommand}" Style="{StaticResource NeonButton}" BorderBrush="{StaticResource NeonPinkBrush}" Margin="0,0,10,0" Padding="0,8"/>
+                            <Button Grid.Column="1" Content="Kaydet" Command="{Binding SaveNewTeacherCommand}" Style="{StaticResource NeonCyanButton}" Margin="10,0,0,0" Padding="0,8"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
         </Grid>
 
         <!-- Footer -->

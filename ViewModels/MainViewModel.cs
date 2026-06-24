@@ -29,6 +29,9 @@ namespace SahneSenin.ViewModels
         private GameState _currentState = GameState.Setup;
         private ObservableCollection<Teacher> _teachers = new();
         private ObservableCollection<Teacher> _unplayedTeachers = new();
+        private bool _isAddTeacherVisible;
+        private string _newTeacherName = string.Empty;
+        private ObservableCollection<ArtistSelectionItem> _allArtists = new();
         private Teacher? _currentTeacher;
         private string _secretSongName = string.Empty;
         private string _currentArtist = string.Empty;
@@ -95,6 +98,9 @@ namespace SahneSenin.ViewModels
         public ICommand EndGameCommand { get; }
         public ICommand CloseCelebrationCommand { get; }
         public ICommand ToggleServerCommand { get; }
+        public ICommand ShowAddTeacherCommand { get; }
+        public ICommand CloseAddTeacherCommand { get; }
+        public ICommand SaveNewTeacherCommand { get; }
 
         public GameState CurrentState
         {
@@ -112,6 +118,24 @@ namespace SahneSenin.ViewModels
         {
             get => _unplayedTeachers;
             set => SetProperty(ref _unplayedTeachers, value);
+        }
+
+        public bool IsAddTeacherVisible
+        {
+            get => _isAddTeacherVisible;
+            set => SetProperty(ref _isAddTeacherVisible, value);
+        }
+
+        public string NewTeacherName
+        {
+            get => _newTeacherName;
+            set => SetProperty(ref _newTeacherName, value);
+        }
+
+        public ObservableCollection<ArtistSelectionItem> AllArtists
+        {
+            get => _allArtists;
+            set => SetProperty(ref _allArtists, value);
         }
 
         public Teacher? CurrentTeacher
@@ -436,6 +460,9 @@ namespace SahneSenin.ViewModels
             EndGameCommand = new RelayCommand(ExecuteEndGame, CanEndGame);
             CloseCelebrationCommand = new RelayCommand(ExecuteCloseCelebration);
             ToggleServerCommand = new RelayCommand(ExecuteToggleServer, CanToggleServer);
+            ShowAddTeacherCommand = new RelayCommand(ExecuteShowAddTeacher);
+            CloseAddTeacherCommand = new RelayCommand(ExecuteCloseAddTeacher);
+            SaveNewTeacherCommand = new RelayCommand(ExecuteSaveNewTeacher);
 
             LoadInitialData();
             InitializeServerStatusAsync();
@@ -504,6 +531,78 @@ namespace SahneSenin.ViewModels
                 _dataService.ImportFromCsv(openFileDialog.FileName);
                 LoadInitialData();
             }
+        }
+
+        private void ExecuteShowAddTeacher()
+        {
+            NewTeacherName = string.Empty;
+
+            // Scan MusicPool to get all artists
+            var pool = _dataService.ScanMusicPool();
+            var artistsList = pool.Keys.OrderBy(k => k).Select(k => new ArtistSelectionItem 
+            { 
+                Name = k, 
+                IsSelected = false 
+            }).ToList();
+
+            AllArtists = new ObservableCollection<ArtistSelectionItem>(artistsList);
+            IsAddTeacherVisible = true;
+        }
+
+        private void ExecuteCloseAddTeacher()
+        {
+            IsAddTeacherVisible = false;
+        }
+
+        private void ExecuteSaveNewTeacher()
+        {
+            if (string.IsNullOrWhiteSpace(NewTeacherName))
+            {
+                System.Windows.MessageBox.Show("Lütfen geçerli bir öğretmen adı girin.", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var name = NewTeacherName.Trim();
+
+            // Check for duplicate name
+            if (Teachers.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                System.Windows.MessageBox.Show("Bu isimde bir yarışmacı zaten mevcut.", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var selectedArtists = AllArtists
+                .Where(a => a.IsSelected)
+                .Select(a => a.Name)
+                .ToList();
+
+            // Default to "Genel" if no artist is selected
+            if (selectedArtists.Count == 0)
+            {
+                selectedArtists.Add("Genel");
+            }
+
+            string photosDir = _dataService.GetTeacherPhotosDirectory();
+            var newTeacher = new Teacher
+            {
+                Name = name,
+                SelectedArtists = selectedArtists,
+                Score = 0,
+                HasPlayed = false,
+                PhotoPath = ResolveTeacherPhoto(photosDir, name)
+            };
+
+            Teachers.Add(newTeacher);
+
+            if (CurrentState == GameState.Setup)
+            {
+                CurrentState = GameState.TeacherSelection;
+            }
+
+            UpdateUnplayedTeachers();
+            SaveGameData();
+
+            IsAddTeacherVisible = false;
         }
 
         private void ExecuteResetGame()
