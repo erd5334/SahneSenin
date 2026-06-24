@@ -109,7 +109,39 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Circular Spin the Wheel Grid -->
-                    <Grid Grid.Column="0" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid Width="500" Height="500" VerticalAlignment="Center">
+                        <Grid.RenderTransform>
+                            <TranslateTransform X="0"/>
+                        </Grid.RenderTransform>
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Grid.Column" Value="2"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
+                                        <Setter Property="Grid.Column" Value="0"/>
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                                     From="670" To="0" Duration="0:0:0.8" DecelerationRatio="0.8"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                                     To="0" Duration="0:0:0.1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        
                         <!-- Outer Glowing Rim -->
                         <Ellipse Width="490" Height="490" Stroke="{StaticResource NeonPinkBrush}" StrokeThickness="5" Effect="{StaticResource PinkGlow}" Fill="#15000000"/>
                         <Ellipse Width="476" Height="476" Stroke="{StaticResource NeonCyanBrush}" StrokeThickness="2" Effect="{StaticResource CyanGlow}"/>
@@ -138,9 +170,26 @@
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Opacity" Value="0"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
                                         <Setter Property="Visibility" Value="Visible"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0" To="1" Duration="0:0:0.6" BeginTime="0:0:0.4"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     To="0" Duration="0:0:0.1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -201,9 +250,26 @@
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
                                 <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Opacity" Value="0"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsSpinCompleted}" Value="True">
                                         <Setter Property="Visibility" Value="Visible"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0" To="1" Duration="0:0:0.6" BeginTime="0:0:0.4"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     To="0" Duration="0:0:0.1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
