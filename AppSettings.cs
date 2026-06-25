@@ -15,6 +15,22 @@ namespace SahneSenin
         public int GuessingDuration { get; set; } = 10;
         public string CustomMusicPoolPath { get; set; } = string.Empty;
 
+        // Custom Scoring Settings
+        public int NormalCorrectPoints { get; set; } = 10;
+        public int NormalBonusPoints { get; set; } = 15;
+        public int NormalWrongPoints { get; set; } = 0;
+
+        public int PoolCorrectPoints { get; set; } = 20;
+        public int PoolBonusPoints { get; set; } = 40;
+        public int PoolWrongPoints { get; set; } = 0;
+
+        public int ExtraCorrectPoints { get; set; } = 15;
+        public int ExtraBonusPoints { get; set; } = 20;
+        public int ExtraWrongPoints { get; set; } = -5;
+
+        public int RiskMultiplier { get; set; } = 2;
+        public int RiskWrongPoints { get; set; } = -5;
+
         public static AppSettings Load()
         {
             try

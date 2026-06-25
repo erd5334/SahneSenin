@@ -900,14 +900,21 @@ namespace SahneSenin.ViewModels
             IsTimerCritical = false;
             _speechService.StopListening();
 
+            var settings = AppSettings.Load();
+
             if (gradeType == "Correct")
             {
-                int baseCorrect = UseAllArtistsPool ? 20 : 10;
+                int baseCorrect = settings.NormalCorrectPoints;
                 if (!string.IsNullOrEmpty(ExtraSelectedArtist))
                 {
-                    baseCorrect = Math.Max(1, baseCorrect - 3); // Penalty for choosing 4th (extra) artist
+                    baseCorrect = settings.ExtraCorrectPoints;
                 }
-                pointsToAdd = IsRiskActive ? baseCorrect * 2 : baseCorrect;
+                else if (UseAllArtistsPool)
+                {
+                    baseCorrect = settings.PoolCorrectPoints;
+                }
+
+                pointsToAdd = IsRiskActive ? baseCorrect * settings.RiskMultiplier : baseCorrect;
                 ScoreStatusText = IsRiskActive ? $"RİSK TUTTU! Bildiniz (+{pointsToAdd})." : $"Tebrikler! Bildiniz (+{pointsToAdd}).";
                 CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
                 _audioService.PlaySfx("correct");
@@ -915,11 +922,16 @@ namespace SahneSenin.ViewModels
             }
             else if (gradeType == "Bonus")
             {
-                int baseBonus = UseAllArtistsPool ? 40 : 15;
+                int baseBonus = settings.NormalBonusPoints;
                 if (!string.IsNullOrEmpty(ExtraSelectedArtist))
                 {
-                    baseBonus = Math.Max(1, baseBonus - 3); // Penalty for choosing 4th (extra) artist
+                    baseBonus = settings.ExtraBonusPoints;
                 }
+                else if (UseAllArtistsPool)
+                {
+                    baseBonus = settings.PoolBonusPoints;
+                }
+
                 pointsToAdd = baseBonus;
                 ScoreStatusText = $"Harika Söyledi! Bonus Puan (+{pointsToAdd}).";
                 CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
@@ -930,8 +942,26 @@ namespace SahneSenin.ViewModels
             }
             else // Wrong
             {
-                pointsToAdd = IsRiskActive ? -5 : 0;
-                ScoreStatusText = IsRiskActive ? $"RİSK KAYBEDİLDİ! Bilemedi ({pointsToAdd})." : "Bilemedi!";
+                int baseWrong = settings.NormalWrongPoints;
+                if (!string.IsNullOrEmpty(ExtraSelectedArtist))
+                {
+                    baseWrong = settings.ExtraWrongPoints;
+                }
+                else if (UseAllArtistsPool)
+                {
+                    baseWrong = settings.PoolWrongPoints;
+                }
+
+                if (IsRiskActive)
+                {
+                    pointsToAdd = baseWrong + settings.RiskWrongPoints;
+                }
+                else
+                {
+                    pointsToAdd = baseWrong;
+                }
+
+                ScoreStatusText = IsRiskActive ? $"RİSK KAYBEDİLDİ! Bilemedi ({pointsToAdd})." : (pointsToAdd < 0 ? $"Bilemedi ({pointsToAdd})." : "Bilemedi!");
                 CorrectAnswerText = $"Doğru Şarkı: {SecretSongName}";
                 _audioService.PlaySfx("wrong");
                 CurrentStreak = 0;
